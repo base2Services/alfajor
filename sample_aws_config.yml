@@ -1,0 +1,33 @@
+aws:
+  default:
+    region: ap-southeast-2
+    ec2_region_endpoint': ec2.ap-southeast-2.amazonaws.com
+    aws_access_key_id: xxxxxxxx
+    aws_secret_access_key:  yyyyyyyyyyyy
+    assumed_role:
+      use_assumed_role: false
+      role_arn: arn:aws:iam::1111111:role/xAccCleanUp
+    proxy:
+      use_proxy: false
+      proxy_host: 1.1.1.1
+      proxy_port: 3128
+      proxy_user:
+      proxy_pass:
+    use_local_role: false
+    sns_arn: arn:aws:sns:ap-southeast-2:111111:maintenance
+    snapshot:
+      instance_tag: MakeSnapshot
+      snapshot_tags:
+        AutomatedCopy: true
+      retention_tag: Retention
+      keep_flags:
+        KeepSnapshot: true
+      retentions:
+        default: month
+        day:  1
+        week: 7
+        month: 28
+    cleaning:
+      skip_tags:
+        Keep: true
+      no_tag_grace_days: 7
