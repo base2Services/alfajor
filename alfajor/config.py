@@ -21,7 +21,7 @@ class Config():
   def get_connection_dictionary(self):
     return self.compile_connection(self.config)
 
-  def compile_connect(self, config):
+  def compile_connection(self, config):
     aws_dict = {"region_name": config["region"]}
     if self.check_value("assumed_role") and self.check_value("use_assumed_role", config["assumed_role"]) and config["assumed_role"]["use_assumed_role"]:
       aws_dict["assumed_role"] = True
