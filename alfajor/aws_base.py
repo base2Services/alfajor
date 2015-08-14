@@ -147,6 +147,7 @@ class AWS_BASE(object):
 
   def _add_assumed_role(self, config):
     c = {}
+    pprint(config)
     c['region_name'] = config['region_name']
 
     assumedRoleObject = STSConnection().assume_role(
