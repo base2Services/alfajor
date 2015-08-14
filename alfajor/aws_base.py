@@ -1,8 +1,11 @@
+mport boto                                                                                        |  ---------------------------------------------------------------------------------------------------
+from boto.sts import STSConnection
 import boto.sns
 from alfajor import config
 from config import Config
 from pprint import pprint
 import datetime
+import uuid
 
 class AWS_BASE(object):
   _config = None
@@ -21,6 +24,7 @@ class AWS_BASE(object):
     self._connection_settings = self._config.get_connection_dictionary()
     self._debug = kwargs.get('debug', False)
     self._verbose = kwargs.get('verbose', False)
+    self._connection_settings = self._generate_settings(self._config.get_connection_dictionary())
     self.init()
 
   def init(self):
@@ -80,10 +84,13 @@ class AWS_BASE(object):
   def get_notifications(self, on_off):
     return self._notifications
 
-  def log(self, *args):
-    s = ""
-    for arg in args:
-      s = s + str(arg)
+  def concat(self, *args):                                                                         |    def log(self, *args):
+      s = ""                                                                                         |      s = ""
+      for arg in args:                                                                               |      for arg in args:
+        s = s + str(arg)                                                                             |        s = s + str(arg)
+                                                                                                     |  ---------------------------------------------------------------------------------------------------
+  def log(self, *args):                                                                            |  ---------------------------------------------------------------------------------------------------
+    s = self.concat(args)
     self.notify(s)
     if self._verbose:
       self.verbose(s)
@@ -92,15 +99,16 @@ class AWS_BASE(object):
     else:
       print(s)
 
-  def notify(self, s):
+  def notify(self, *args):
+    s = self.concat(args)
     if self.notifications:
       print "hi"
 
-  def debug(self, s):
-    print s
+  def debug(self, *args):
+    print self.concat(args)
 
-  def verbose(self, s):
-    print s
+  def verbose(self, *args):
+    print self.concat(args)
     #TODO: if dict then pprint __dict__
 
   def get_retention_tag(self):
@@ -132,3 +140,22 @@ class AWS_BASE(object):
       retentions["month"] = "28"
     self.verbose(retentions) #{'day': 1, 'default': 'month', 'month': 28, 'week': 7}
     return retentions
+
+  def _generate_settings(self, config):
+    if config["assumed_role"] and config["assumed_role"]:
+      config = self._add_assumed_role(config)
+
+  def _add_assumed_role(self, config):
+    c = {}
+    c['region_name'] = config['region_name']
+
+    assumedRoleObject = STSConnection().assume_role(
+      role_arn="arn:aws:iam::408454591398:role/xAccCleanUpAccess",
+      role_session_name="assumeRole_" + uuid.uuid4().urn[-12:]
+    )
+
+    c["aws_access_key_id"] = assumedRoleObject.credentials.access_key
+    c["aws_secret_access_key"] = assumedRoleObject.credentials.secret_key
+    c["security_token"] = assumedRoleObject.credentials.session_token
+
+    return c
