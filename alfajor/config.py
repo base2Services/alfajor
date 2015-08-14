@@ -24,7 +24,6 @@ class Config():
   def compile_connection(self, config):
     aws_dict = {"region_name": config["region"]}
     if self.check_value("assumed_role", config) and self.check_value("use_assumed_role", config["assumed_role"]) and config["assumed_role"]["use_assumed_role"]:
-      print config
       aws_dict["assumed_role"] = True
       if not self.check_value("assumed_role_arn", config["assumed_role"]):
         raise ValueError("assumed_role yes but no arn")

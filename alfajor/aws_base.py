@@ -147,11 +147,10 @@ class AWS_BASE(object):
 
   def _add_assumed_role(self, config):
     c = {}
-    pprint(config)
     c['region_name'] = config['region_name']
 
     assumedRoleObject = STSConnection().assume_role(
-      role_arn=c["assumed_role_arn"],
+      role_arn=config["assumed_role_arn"],
       role_session_name="assumeRole_" + uuid.uuid4().urn[-12:]
     )
 
