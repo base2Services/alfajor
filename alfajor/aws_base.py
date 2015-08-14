@@ -144,6 +144,7 @@ class AWS_BASE(object):
   def _generate_settings(self, config):
     if config["assumed_role"] and config["assumed_role"]:
       config = self._add_assumed_role(config)
+    return config
 
   def _add_assumed_role(self, config):
     c = {}
