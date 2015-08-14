@@ -113,7 +113,7 @@ class EC2(AWS_BASE):
         #retention does not match default from above will be used
         self.debug("retention interval not found - will use default")
 
-    self.debug("retention = " + retention)
+    self.debug("retention = ", retention)
     self.debug("days to keep = " + str(retentions[retentions["default"]]))
     #e.g. 28
     return days_to_keep
