@@ -80,7 +80,10 @@ class AWS_BASE(object):
   def get_notifications(self, on_off):
     return self._notifications
 
-  def log(self, s):
+  def log(self, *args):
+    s = ""
+    for arg in args:
+      s = s + str(arg)
     self.notify(s)
     if self._verbose:
       self.verbose(s)

@@ -19,11 +19,21 @@ class Config():
     return self.config
 
   def get_connection_dictionary(self):
-    aws_dict = {"region_name": self.config["region"], 
-            "aws_access_key_id": self.config["aws_access_key_id"], 
-            "aws_secret_access_key": self.config["aws_secret_access_key"]}
+    aws_dict = {"region_name": self.config["region"]}
+    if self.check_value("aws_access_key_id", self.config):
+      if not self.check_value("aws_secret_access_key", self.config):
+       raise ValueError('No tag provided for backup and snapshot:instance_tag set')
+      aws_dict["aws_access_key_id"] = self.config["aws_access_key_id"]
+      aws_dict["aws_secret_access_key"] = self.config["aws_secret_access_key"]
     return aws_dict
 
   def get_default_sns_arn(self):
     return self.config["sns_arn"]
+
+  def check_value(self, k, d):
+    found = False
+    if k in d and (d[k] != "" and d[k] is not None):
+      found = True
+    return found
+
 
