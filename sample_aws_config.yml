@@ -6,7 +6,7 @@ aws:
     aws_secret_access_key:  yyyyyyyyyyyy
     assumed_role:
       use_assumed_role: false
-      role_arn: arn:aws:iam::1111111:role/xAccCleanUp
+      assumed_role_arn: arn:aws:iam::1111111:role/xAccCleanUp
     proxy:
       use_proxy: false
       proxy_host: 1.1.1.1

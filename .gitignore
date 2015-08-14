@@ -1,2 +1,4 @@
 *.pyc
 aws_config.yml
+*.swp
+check_*.py

@@ -123,7 +123,7 @@ class EC2(AWS_BASE):
   #delete the ami's older than the retention period
   def delete_with_retention(self, instance, delete = False):
     days_to_keep = self.get_days_to_keep(instance)
-  
+
     filters = {"description" : "*original_instance:" + instance.id + "*"}
     #could be more efficient to cache these next 2
     images = self.get_conn().get_all_images(filters = filters)
@@ -181,15 +181,7 @@ class EC2(AWS_BASE):
       self.clean_backups(tag)
       create_snapshots(tag)
 
-  def get_tags(self, resource_id):
-    tags = {}
-    tags = self.get_conn().get_all_tags({ 'resource-id': resource_id })
-    for tag in tags:
-        # Tags starting with 'aws:' are reserved for internal use
-        #if not tag.name.startswith('aws:'):
-      tags[tag.name] = tag.value
-    return tags
 
-
+#TODO: add tag
 #TODO: startup
 #TODO: shutdown
