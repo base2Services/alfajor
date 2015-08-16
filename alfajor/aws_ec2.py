@@ -118,6 +118,21 @@ class EC2(AWS_BASE):
     #e.g. 28
     return days_to_keep
 
+  def list_snapshot_for_image(self, image):
+    snapshots = self.get_conn().get_all_snapshots()
+    regex_ami = re.compile('ami-[^ ]+')
+    snapshot_versus_ami = {}
+
+    for snapshot in snapshots:
+      snap_image_ids = regex_ami.findall(snapshot.description)
+      if len(snap_image_ids) ==1:
+        snapshot_versus_ami[snapshot.id] = snap_image_ids[0]
+
+    for s in snapshot_versus_ami:
+      if snapshot_versus_ami[s] == image.id:
+        s = "snapshot" + s + " for ami " + snapshot_versus_ami[s] + "\n\n"
+        self.log(s)
+
   #for any instance, delete the ami's (unless keep_flag is defined and true)
   #for each ami that will be deleted find the ami's and delete them
   #delete the ami's older than the retention period
@@ -125,16 +140,8 @@ class EC2(AWS_BASE):
     days_to_keep = self.get_days_to_keep(instance)
 
     filters = {"description" : "*original_instance:" + instance.id + "*"}
-    #could be more efficient to cache these next 2
-    images = self.get_conn().get_all_images(filters = filters)
-    snapshots = self.get_conn().get_all_snapshots()
-    regex_ami = re.compile('ami-[^ ]+')
 
-    snapshot_versus_ami = {}
-    for snapshot in snapshots:
-      snap_image_ids = regex_ami.findall(snapshot.description)
-      if len(snap_image_ids) ==1:
-        snapshot_versus_ami[snapshot.id] = snap_image_ids[0]
+    images = self.get_conn().get_all_images(filters = filters)
 
     #TODO: also check for automation tag - else might be manual snapshot for some reason
     for image in images:
@@ -142,18 +149,16 @@ class EC2(AWS_BASE):
       self.verbose("creation date:" + str(creation_date))
       days_since_creation = (date.today() - date(int(creation_date[0]), int(creation_date[1]), int(creation_date[2]))).days
       self.verbose("days since creation: " + str(days_since_creation))
+
       if days_since_creation > days_to_keep:
         self.debug(image.id + " is going to be deregistered")
         self.debug("description " + image.description)
         self.debug("creation_date: " + str(image.creationDate))
         self.debug("tags:" + str(image.tags))
         self.debug("Days since creation is : " + str(days_since_creation))
-        for s in snapshot_versus_ami:
-          if snapshot_versus_ami[s] == image.id:
-            s = "will delete snapshot " + s + " for ami " + snapshot_versus_ami[s] + "\n\n"
-            self.debug(s)
         #self.debug(image.block_device_mapping.current_value.snapshot_id)
-        image.deregister(delete_snapshot=True)
+        if delete:
+          image.deregister(delete_snapshot=True)
 
   def clean_backups(self, tag = None):#TODO: **kwargs
     reservations = self.get_tagged_reservations(tag, "true")
@@ -163,7 +168,6 @@ class EC2(AWS_BASE):
         self.debug("clean backups processing: " + i.id)
         #TODO: check for keep flag
         self.log(self.delete_with_retention(i,True))
-        self.log("\n\n")
 
   def create_snapshots(self, tag = None):
     reservations = self.get_tagged_reservations(tag, "true")
