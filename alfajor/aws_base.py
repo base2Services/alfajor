@@ -88,6 +88,7 @@ class AWS_BASE(object):
       s = ""
       for arg in args:
         s = s + str(arg)
+      return s
 
   def log(self, *args):
     s = self.concat(args)
@@ -142,7 +143,7 @@ class AWS_BASE(object):
     return retentions
 
   def _generate_settings(self, config):
-    if config["assumed_role"] and config["assumed_role"]:
+    if "assumed_role" in config and config["assumed_role"]:
       config = self._add_assumed_role(config)
     return config
 

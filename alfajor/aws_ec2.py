@@ -15,7 +15,7 @@ class EC2(AWS_BASE):
     return self.list_volumes_by_condition("attached")
 
   def list_all_volumes(self):
-    self.list_volumes_by_condition()
+    return self.list_volumes_by_condition()
 
   def list_volumes_by_condition(self, condition = "all"):
     vols = self.get_conn().get_all_volumes()
@@ -25,6 +25,7 @@ class EC2(AWS_BASE):
       condition == None
 
     for vol in vols:
+      print vol.id, vol.attachment_state()
       if (condition == "all") or (vol.attachment_state() == condition):
         self.log("state: ", vol.attachment_state())
         counter = counter + 1
@@ -183,7 +184,7 @@ class EC2(AWS_BASE):
         raise ValueError('No tag provided for backup and snapshot:instance_tag set')
       self.debug("tag for backups: " + tag)
       self.clean_backups(tag)
-      create_snapshots(tag)
+      self.create_snapshots(tag)
 
 
 #TODO: add tag
