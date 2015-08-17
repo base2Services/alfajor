@@ -4,6 +4,7 @@ from alfajor import aws_base
 from aws_base import AWS_BASE
 from pprint import pprint
 from datetime import date
+import time
 import re
 
 class EC2(AWS_BASE):
@@ -80,7 +81,13 @@ class EC2(AWS_BASE):
     image_id = instance.create_image(name, description, no_reboot)
     self.log(image_id)
     #TODO: handle boto.exception.EC2ResponseError: for eventual consistency: try catch
-    new_image = self.get_conn().get_image(image_id)
+    try:
+      new_image = self.get_conn().get_image(image_id)
+    except:
+      log("caught exception - sleeping 45 then try get image_id again")
+      log(sys.exc_info()[0])
+      time.sleep(self.get_default_wait())
+
     new_tags = instance.tags
     s_tags = self.get_snapshot_tags()
     self.log(new_image.state)
@@ -91,6 +98,8 @@ class EC2(AWS_BASE):
     self.set_tags(new_image, new_tags)
 
     return image_id
+
+
 
   def get_days_to_keep(self, instance):
     r_tag = self.get_retention_tag()
@@ -118,6 +127,8 @@ class EC2(AWS_BASE):
     self.debug("days to keep = " + str(retentions[retentions["default"]]))
     #e.g. 28
     return days_to_keep
+
+
 
   def list_snapshot_for_image(self, image):
     snapshots = self.get_conn().get_all_snapshots()
@@ -190,3 +201,7 @@ class EC2(AWS_BASE):
 #TODO: add tag
 #TODO: startup
 #TODO: shutdown
+#TODO: clean no tag with grace days
+#TODO: sns notify
+#TODO: list orphan snapshots
+#TODO: clean unattached volumes

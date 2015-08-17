@@ -103,6 +103,7 @@ class AWS_BASE(object):
   def notify(self, *args):
     s = self.concat(args)
     if self.notifications:
+      #TODO: SNS
       print "hi"
 
   def debug(self, *args):
@@ -161,3 +162,6 @@ class AWS_BASE(object):
     c["security_token"] = assumedRoleObject.credentials.session_token
 
     return c
+
+  def get_default_wait(self):
+    return 45
