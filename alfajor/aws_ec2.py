@@ -79,6 +79,7 @@ class EC2(AWS_BASE):
     name = self.get_instance_name(instance) + "-" + self.get_date_string()
     description = "CreateImageScript: copy_of:" + name + " created_at:" + date_string + " original_instance:" + instance.id
     image_id = instance.create_image(name, description, no_reboot)
+    self.log("backup for:", instance.id)
     self.log(image_id)
     #TODO: handle boto.exception.EC2ResponseError: for eventual consistency: try catch
     try:
