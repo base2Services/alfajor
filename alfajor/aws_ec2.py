@@ -12,11 +12,17 @@ class EC2(AWS_BASE):
   def init(self):
     self.set_conn(boto.ec2.connect_to_region(**self.get_connection_settings()))
 
+
+
   def list_attached_volumes(self):
     return self.list_volumes_by_condition("attached")
 
+
+
   def list_all_volumes(self):
     return self.list_volumes_by_condition()
+
+
 
   def list_volumes_by_condition(self, condition = "all"):
     vols = self.get_conn().get_all_volumes()
@@ -30,30 +36,44 @@ class EC2(AWS_BASE):
       if (condition == "all") or (vol.attachment_state() == condition):
         self.log("state: ", vol.attachment_state())
         counter = counter + 1
-        self.log("Attached", counter, vol.id, vol.attachment_state(), vol.create_time, vol.size)
+        log("Unattached: ", counter, ", ", vol.id, ", ", state, ",", vol.create_time, ", ", vol.size)
     return counter
+
+
 
   def list_unattached_volumes(self):
     return self.list_volumes_by_condition("unattached")
 
+
+
   def list_instances(self):
     self.list_tagged_instances()
+
+
 
   def list_tagged_instances(self, tag = "Name", value = "*"):
     self.list_reservations(self.get_tagged_reservations(tag, value))
     #return count?
 
+
+
   def get_tagged_reservations(self, tag = "Name", value = "*"):
     return self.get_conn().get_all_instances(filters={"tag:" + tag : value})
+
+
 
   def list_reservations(self, reservations):
     for r in reservations:
       for i in r.instances:
         self.print_instance(i)
 
+
+
   def print_instance(self, instance):
     l = instance.id, self.get_instance_name(instance), instance.state, instance.image_id, instance.launch_time, instance.private_ip_address, instance.tags, instance.instance_profile
     self.log(l)
+
+
 
   def get_instance_name(self, instance):
     name = "-"
@@ -61,18 +81,26 @@ class EC2(AWS_BASE):
       name = instance.tags["Name"]
     return name
 
+
+
   def pprint_instance(self, instance):
     pprint(instance.__dict__)
+
+
 
   def get_tagged_volumes(self, tag):
     #get all the volumes with the tag
     return None
+
+
 
   def create_images_from_tag(self, tag = None):
     #get tag if none
     #get instances
     #foreach create image
     return None
+
+
 
   def create_image(self, instance, no_reboot = True):
     date_string = self.get_date_string()
@@ -146,6 +174,8 @@ class EC2(AWS_BASE):
         s = "snapshot" + s + " for ami " + snapshot_versus_ami[s] + "\n\n"
         self.log(s)
 
+
+
   #for any instance, delete the ami's (unless keep_flag is defined and true)
   #for each ami that will be deleted find the ami's and delete them
   #delete the ami's older than the retention period
@@ -173,6 +203,8 @@ class EC2(AWS_BASE):
         if delete:
           image.deregister(delete_snapshot=True)
 
+
+
   def clean_backups(self, tag = None):#TODO: **kwargs
     reservations = self.get_tagged_reservations(tag, "true")
     self.list_reservations(reservations)
@@ -182,12 +214,16 @@ class EC2(AWS_BASE):
         #TODO: check for keep flag
         self.log(self.delete_with_retention(i,True))
 
+
+
   def create_snapshots(self, tag = None):
     reservations = self.get_tagged_reservations(tag, "true")
     self.list_reservations(reservations)
     for r in reservations:
       for i in r.instances:
         self.log(self.create_image(i))
+
+
 
   def create_backups(self, tag = None):
     if tag == None:
@@ -197,6 +233,19 @@ class EC2(AWS_BASE):
       self.debug("tag for backups: " + tag)
       self.clean_backups(tag)
       self.create_snapshots(tag)
+
+
+
+  def delete_unattachedVolumes():
+    counter = 0
+    vols = self.list_volumes_by_condition("unattached")
+    for vol in vols:
+      state = vol.attachment_state()
+      if state == None:
+        counter = counter + 1
+        log("Unattached: ", counter, ", ", vol.id, ", ", state, ",", vol.create_time, ", ", vol.size)
+        vol.delete()
+
 
 
 #TODO: add tag

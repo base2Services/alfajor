@@ -16,6 +16,8 @@ class AWS_BASE(object):
   _debug = None
   _verbose = None
 
+
+
   def __init__(self, **kwargs):
     self._config_file = kwargs.get('config_file', 'aws_config.yml')
     self._account = kwargs.get('account', 'default')
@@ -27,13 +29,19 @@ class AWS_BASE(object):
     self._connection_settings = self._generate_settings(self._config.get_connection_dictionary())
     self.init()
 
+
+
   def init(self):
     return None
+
+
 
   def get_date_string(self):
     i = datetime.datetime.now()
     date_string = ("%s%02d%02d_%02d%02d%02d" % (i.year, i.month, i.day, i.hour, i.minute, i.second) )
     return date_string
+
+
 
   def get_snapshot_instance_tag(self):
     tag = "MakeSnapshot"
@@ -44,6 +52,8 @@ class AWS_BASE(object):
       if "instance_tag" in c["snapshot"]:
         tag = c["snapshot"]["instance_tag"]
     return tag
+
+
 
   def get_snapshot_tags(self):
     tags = {}
@@ -56,39 +66,59 @@ class AWS_BASE(object):
         tags = c["snapshot"]["snapshot_tags"]
     return tags
 
+
+
   def set_tags(self, resource, tags):
     for tag, value in tags.iteritems():
       if not tag.startswith('aws:') and len(tag) < 127:#127 = max len for tag
         resource.add_tag(tag, value)
 
+
+
   def get_connection_settings(self):
     return self._connection_settings
+
+
 
   def set_conn(self, conn):
     self._conn = conn
 
+
+
   def get_conn(self):
     return self._conn
+
+
 
   def __str__(self):
     s = "Class: " + self.__class__.__name__ + "::" + str(self._config.get_config())
     return str(s)
 
+
+
   def get_config(self):
     return self._config
+
+
 
   def set_notifications(self, on_off):
     self._notifications = on_off
     return true
 
+
+
   def get_notifications(self, on_off):
     return self._notifications
+
+
 
   def concat(self, args):
       s = ""
       for arg in args:
         s = s + str(arg)
       return s
+
+
 
   def log(self, *args):
     s = self.concat(args)
@@ -100,18 +130,26 @@ class AWS_BASE(object):
     else:
       print(s)
 
+
+
   def notify(self, *args):
     s = self.concat(args)
     if self.notifications:
       #TODO: SNS
       print "hi"
 
+
+
   def debug(self, *args):
     print self.concat(args)
+
+
 
   def verbose(self, *args):
     print self.concat(args)
     #TODO: if dict then pprint __dict__
+
+
 
   def get_retention_tag(self):
     #TODO: remove hard coded defaults?
@@ -124,6 +162,8 @@ class AWS_BASE(object):
         tag = c["snapshot"]["retention_tag"]
     self.debug("tar for retention:" + tag)
     return tag
+
+
 
   def get_retention_config(self):
     #TODO: cach result :: if not __retentions then do otherwise return __retentions
@@ -143,10 +183,14 @@ class AWS_BASE(object):
     self.verbose(retentions) #{'day': 1, 'default': 'month', 'month': 28, 'week': 7}
     return retentions
 
+
+
   def _generate_settings(self, config):
     if "assumed_role" in config and config["assumed_role"]:
       config = self._add_assumed_role(config)
     return config
+
+
 
   def _add_assumed_role(self, config):
     c = {}
@@ -162,6 +206,8 @@ class AWS_BASE(object):
     c["security_token"] = assumedRoleObject.credentials.session_token
 
     return c
+
+
 
   def get_default_wait(self):
     return 45
