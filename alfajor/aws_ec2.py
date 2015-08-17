@@ -85,8 +85,8 @@ class EC2(AWS_BASE):
     try:
       new_image = self.get_conn().get_image(image_id)
     except:
-      log("caught exception - sleeping 45 then try get image_id again")
-      log(sys.exc_info()[0])
+      self.log("caught exception - sleeping ", self.get_default_wait ," then try get image_id again")
+      self.log(sys.exc_info()[0])
       time.sleep(self.get_default_wait())
 
     new_tags = instance.tags
