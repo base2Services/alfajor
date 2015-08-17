@@ -32,7 +32,6 @@ class EC2(AWS_BASE):
       condition == None
 
     for vol in vols:
-      print vol.id, vol.attachment_state()
       if (condition == "all") or (vol.attachment_state() == condition):
         self.log("state: ", vol.attachment_state())
         counter = counter + 1
