@@ -235,7 +235,7 @@ class EC2(AWS_BASE):
 
 
 
-  def delete_unattached_volumes():
+  def delete_unattached_volumes(self):
     counter = 0
     vols = self.list_volumes_by_condition("unattached")
     for vol in vols:
