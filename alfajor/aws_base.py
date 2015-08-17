@@ -84,7 +84,7 @@ class AWS_BASE(object):
   def get_notifications(self, on_off):
     return self._notifications
 
-  def concat(self, *args):
+  def concat(self, args):
       s = ""
       for arg in args:
         s = s + str(arg)
