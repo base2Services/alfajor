@@ -36,7 +36,7 @@ class EC2(AWS_BASE):
         self.log("state: ", vol.attachment_state())
         counter = counter + 1
         log("Unattached: ", counter, ", ", vol.id, ", ", state, ",", vol.create_time, ", ", vol.size)
-    return counter
+    return vols
 
 
 
@@ -237,7 +237,7 @@ class EC2(AWS_BASE):
 
   def delete_unattached_volumes(self):
     counter = 0
-    vols = self.list_volumes_by_condition("unattached")
+    vols = self.get_conn().get_all_volumes()
     for vol in vols:
       state = vol.attachment_state()
       if state == None:
