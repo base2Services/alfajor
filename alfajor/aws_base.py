@@ -220,7 +220,7 @@ class AWS_BASE(object):
     return 45
 
   def description_start(self):
-    return _description_start
+    return self._description_start
 
 #TODO: assume role with accont connection first
 #TODO: support proxy config
