@@ -141,7 +141,7 @@ class AWS_BASE(object):
 
   def notify(self, *args):
     s = self.concat(args)
-    if self.notifications:
+    if self._notifications:
       #TODO: SNS
       print "hi"
 
