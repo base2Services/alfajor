@@ -15,17 +15,19 @@ class AWS_BASE(object):
   _config_file = None
   _debug = None
   _verbose = None
-
+  _description_start = None
 
 
   def __init__(self, **kwargs):
     self._config_file = kwargs.get('config_file', 'aws_config.yml')
     self._account = kwargs.get('account', 'default')
-    self.notifications = kwargs.get('notifications', False)
+    self._notifications = kwargs.get('notifications', False)
     self._config = Config(account = self._account)
     self._connection_settings = self._config.get_connection_dictionary()
     self._debug = kwargs.get('debug', False)
     self._verbose = kwargs.get('verbose', False)
+    self._dry_run = kwargs.get('dry_run', False)
+    self._description_start = kwargs.get("description_start", "alfajor")
     self._connection_settings = self._generate_settings(self._config.get_connection_dictionary())
     self.init()
 
@@ -43,14 +45,14 @@ class AWS_BASE(object):
 
 
 
-  def get_snapshot_instance_tag(self):
+  def get_make_snapshot_tag(self):
     tag = "MakeSnapshot"
     c = self._config.get_config()
     #pprint(c)
     if "snapshot" in c:
       #pprint(c["snapshot"])
-      if "instance_tag" in c["snapshot"]:
-        tag = c["snapshot"]["instance_tag"]
+      if "make_snapshot_tag" in c["snapshot"]:
+        tag = c["snapshot"]["make_snapshot_tag"]
     return tag
 
 
@@ -93,6 +95,11 @@ class AWS_BASE(object):
   def __str__(self):
     s = "Class: " + self.__class__.__name__ + "::" + str(self._config.get_config())
     return str(s)
+
+
+
+  def dry_run(self):
+    reutrn self._dry_run
 
 
 
@@ -211,3 +218,9 @@ class AWS_BASE(object):
 
   def get_default_wait(self):
     return 45
+
+  def description_start(self):
+    return _description_start
+
+#TODO: assume role with accont connection first
+#TODO: support proxy config

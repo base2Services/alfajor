@@ -15,7 +15,7 @@ aws:
       proxy_pass:
     sns_arn: arn:aws:sns:ap-southeast-2:111111:maintenance
     snapshot:
-      instance_tag: MakeSnapshot
+      make_snapshot_tag: MakeSnapshot
       snapshot_tags:
         AutomatedCopy: true
       retention_tag: Retention

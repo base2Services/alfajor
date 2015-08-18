@@ -104,9 +104,10 @@ class EC2(AWS_BASE):
   def create_image(self, instance, no_reboot = True):
     date_string = self.get_date_string()
     name = self.get_instance_name(instance) + "-" + self.get_date_string()
-    description = "CreateImageScript: copy_of:" + name + " created_at:" + date_string + " original_instance:" + instance.id
+    description = self.description_start() + ": copy_of:" + name + " created_at:" + date_string + " original_instance:" + instance.id
     image_id = instance.create_image(name, description, no_reboot)
     self.log("backup for:", instance.id)
+
     self.log(image_id)
     #TODO: handle boto.exception.EC2ResponseError: for eventual consistency: try catch
     try:
@@ -215,7 +216,7 @@ class EC2(AWS_BASE):
 
 
 
-  def create_snapshots(self, tag = None):
+  def create_instance_snapshots(self, tag = None):
     reservations = self.get_tagged_reservations(tag, "true")
     self.list_reservations(reservations)
     for r in reservations:
@@ -226,12 +227,14 @@ class EC2(AWS_BASE):
 
   def create_backups(self, tag = None):
     if tag == None:
-      tag = self.get_snapshot_instance_tag()
+      tag = self.get_make_snapshot_tag()
       if tag == None:
         raise ValueError('No tag provided for backup and snapshot:instance_tag set')
       self.debug("tag for backups: " + tag)
       self.clean_backups(tag)
-      self.create_snapshots(tag)
+      self.create_instance_snapshots(tag)
+      self.clean_volume_backups(tag)
+      self.backup_volumes(tag)
 
 
 
@@ -247,10 +250,37 @@ class EC2(AWS_BASE):
 
 
 
+  def backup_volumes(self, tag):
+    vols = self.get_tagged_volumes(tag, "true")
+    date_string = self.get_date_string()
+    #name = self.get_instance_name(instance) + "-" + self.get_date_string()
+    for vol in vols:
+      #new_tag = vol.id + "-" + self.get_date_string()
+      #TODO: = tags and volume name
+      description = self.description_start() + ": created_at:" + date_string + " original_volume:" + vol.id
+      try:
+        self.log("creating snapshot for volume:", vol.id)
+        new_snapshot = vol.create_snapshot(description)
+        #tags
+        #get snapshot adn apply tags
+      except:
+        self.log("caught exception - sleeping ", self.get_default_wait)
+        self.log(sys.exc_info()[0])
+        time.sleep(self.get_default_wait())
+
+
+  def get_tagged_volumes(self, tag = "Name", value = "*"):
+    return self.get_conn().get_all_volumes(filters={"tag:" + tag : value})
+
+
+
+
 #TODO: add tag
 #TODO: startup
 #TODO: shutdown
 #TODO: clean no tag with grace days
 #TODO: sns notify
 #TODO: list orphan snapshots
-#TODO: clean unattached volumes
+#TODO: clean unattached volumes by age
+#TODO: wait for state - eg after create_image
+#TODO: backup volume
