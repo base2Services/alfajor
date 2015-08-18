@@ -99,7 +99,7 @@ class AWS_BASE(object):
 
 
   def dry_run(self):
-    reutrn self._dry_run
+    return self._dry_run
 
 
 
