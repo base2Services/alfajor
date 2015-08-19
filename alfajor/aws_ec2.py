@@ -6,6 +6,7 @@ from pprint import pprint
 from datetime import date
 import time
 import re
+import sys
 
 class EC2(AWS_BASE):
 
