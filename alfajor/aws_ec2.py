@@ -233,7 +233,7 @@ class EC2(AWS_BASE):
       self.debug("tag for backups: " + tag)
       self.clean_backups(tag)
       self.create_instance_snapshots(tag)
-      self.clean_volume_backups(tag)
+      #TODO: self.clean_volume_backups(tag)
       self.backup_volumes(tag)
 
 
