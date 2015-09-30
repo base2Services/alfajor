@@ -246,7 +246,8 @@ class EC2(AWS_BASE):
       state = vol.attachment_state()
       if state == None:
         counter = counter + 1
-        log("Unattached: ", counter, ", ", vol.id, ", ", state, ",", vol.create_time, ", ", vol.size)
+        loginstance = AWS_BASE()
+        loginstance.log("Unattached: ", counter, ", ", vol.id, ", ", state, ",", vol.create_time, ", ", vol.size)
         vol.delete()
 
 
