@@ -172,6 +172,10 @@ class AWS_BASE(object):
 
 
 
+  def freakout(self, *args):
+    print self.concat(args)
+  #TODO: SNS notify?
+
   def get_retention_config(self):
     #TODO: cach result :: if not __retentions then do otherwise return __retentions
     retentions = {}
