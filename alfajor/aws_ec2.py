@@ -220,7 +220,7 @@ class EC2(AWS_BASE):
 
 
 
-  def deregister_image_eventually_consistent(image, image_id, wait = 45, retries = 3):
+  def deregister_image_eventually_consistent(self, image, image_id, wait = 45, retries = 3):
     counter = 0
 
     while counter < retries:
