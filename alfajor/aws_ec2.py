@@ -128,20 +128,20 @@ class EC2(AWS_BASE):
     return image_id
 
 
-  def get_image_eventually_consistent(self, image_id, timeout = 45, retries = 3):
+  def get_image_eventually_consistent(self, image_id, wait = 45, retries = 3):
     counter = 0
-    new_image = None
 
     while counter < retries:
       try:
         new_image = self.get_conn().get_image(image_id)
+        return new_image
       except:
-        self.log("caught exception - sleeping ", self.get_default_wait ," then try get image_id again")
+        self.log("caught exception - sleeping ", wait ," then try get image_id again")
         self.log(sys.exc_info()[0])
-        time.sleep(self.get_default_wait())
+        time.sleep(wait)
       counter = counter + 1
 
-    return new_image
+    return None
 
 
 
@@ -216,8 +216,22 @@ class EC2(AWS_BASE):
         self.debug("Days since creation is : " + str(days_since_creation))
         #self.debug(image.block_device_mapping.current_value.snapshot_id)
         if delete:
-          image.deregister(delete_snapshot=True)
+          deregister_image_eventually_consistent(image, self.get_default_wait)
 
+
+
+  def deregister_image_eventually_consistent(image, image_id, wait = 45, retries = 3):
+    counter = 0
+
+    while counter < retries:
+      try:
+        image.deregister(delete_snapshot=True)
+        return True
+      except:
+        self.log("caught exception - sleeping ", wait ," will then try deregister image again")
+        self.log(sys.exc_info()[0])
+        time.sleep(wait)
+      counter = counter + 1
 
 
   def clean_backups(self, tag = None):#TODO: **kwargs
