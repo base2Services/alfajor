@@ -216,7 +216,7 @@ class EC2(AWS_BASE):
         self.debug("Days since creation is : " + str(days_since_creation))
         #self.debug(image.block_device_mapping.current_value.snapshot_id)
         if delete:
-          deregister_image_eventually_consistent(image, self.get_default_wait)
+          self.deregister_image_eventually_consistent(image, self.get_default_wait)
 
 
 
