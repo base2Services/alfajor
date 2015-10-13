@@ -111,23 +111,37 @@ class EC2(AWS_BASE):
 
     self.log(image_id)
     #TODO: handle boto.exception.EC2ResponseError: for eventual consistency: try catch
-    try:
-      new_image = self.get_conn().get_image(image_id)
-    except:
-      self.log("caught exception - sleeping ", self.get_default_wait ," then try get image_id again")
-      self.log(sys.exc_info()[0])
-      time.sleep(self.get_default_wait())
+    new_image = self.get_image_eventually_consistent(image_id, self.get_default_wait)
 
-    new_tags = instance.tags
-    s_tags = self.get_snapshot_tags()
-    self.log(new_image.state)
-    self.log(new_image.creationDate)
-    #TODO: tag retention date
-    for tag in s_tags:
-      new_tags[tag] = s_tags[tag]
-    self.set_tags(new_image, new_tags)
+    if new_image is None:
+      self.freakout(new_image, "is none")
+    else:
+      new_tags = instance.tags
+      s_tags = self.get_snapshot_tags()
+      self.log(new_image.state)
+      self.log(new_image.creationDate)
+      #TODO: tag retention date
+      for tag in s_tags:
+        new_tags[tag] = s_tags[tag]
+      self.set_tags(new_image, new_tags)
 
     return image_id
+
+
+  def get_image_eventually_consistent(self, image_id, timeout = 45, retries = 3):
+    counter = 0
+    new_image = None
+
+    while counter < retries:
+      try:
+        new_image = self.get_conn().get_image(image_id)
+      except:
+        self.log("caught exception - sleeping ", self.get_default_wait ," then try get image_id again")
+        self.log(sys.exc_info()[0])
+        time.sleep(self.get_default_wait())
+      counter = counter + 1
+
+    return new_image
 
 
 
