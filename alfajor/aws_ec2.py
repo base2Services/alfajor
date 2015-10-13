@@ -217,7 +217,7 @@ class EC2(AWS_BASE):
         #self.debug(image.block_device_mapping.current_value.snapshot_id)
         if delete:
           deregister_image_eventually_consistent(image, self.get_default_wait)
-          .deregister(delete_snapshot=True)
+
 
 
   def deregister_image_eventually_consistent(image, image_id, wait = 45, retries = 3):
