@@ -111,7 +111,7 @@ class EC2(AWS_BASE):
 
     self.log(image_id)
     #TODO: handle boto.exception.EC2ResponseError: for eventual consistency: try catch
-    new_image = self.get_image_eventually_consistent(image_id, self.get_default_wait)
+    new_image = self.get_image_eventually_consistent(image_id, self.get_default_wait())
 
     if new_image is None:
       self.freakout(new_image, "is none")
