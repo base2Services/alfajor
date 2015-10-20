@@ -138,7 +138,7 @@ class EC2(AWS_BASE):
       except:
         self.log("caught exception - sleeping ", wait ," then try get image_id again")
         self.log(sys.exc_info()[0])
-        time.sleep(wait)
+        time.sleep(float(wait))
       counter = counter + 1
 
     return None
