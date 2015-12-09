@@ -1,3 +1,5 @@
 *.pyc
 aws_config.yml
 *.swp
+.idea
+.idea/*

@@ -267,7 +267,7 @@ class EC2(AWS_BASE):
 
 
 
-  def delete_unattached_volumes(self):
+  def delete_unattached_volumes(self, KeepThisVolume = None):
     counter = 0
     vols = self.get_conn().get_all_volumes()
     for vol in vols:
@@ -277,6 +277,23 @@ class EC2(AWS_BASE):
         loginstance = AWS_BASE()
         loginstance.log("Unattached: ", counter, ", ", vol.id, ", ", state, ",", vol.create_time, ", ", vol.size)
         vol.delete()
+
+  # ToDo: delete_unattached_volumes_keeptag_configfile():
+
+
+  # VolumeKeepTag - Name:KeepThisVolume, Value:True
+  def delete_unattached_volumes_with_keeptag(self, VolumeKeepTag = "KeepThisVolume"):
+    allvols = self.get_conn().get_all_volumes()
+    for vol in allvols:
+        state = vol.attachment_state()
+        # delete if KeepThisVolume does not exist (not set for a vol) and volume is unattached
+        # ToDo: add logic to check whether TagName has TagValue. all volumes need to be tagged with KeepThisVolume first
+        if VolumeKeepTag not in vol.tags and state == None:
+          counter = counter + 1
+          loginstance = AWS_BASE()
+          loginstance.log("Unattached: ", counter, ", ", vol.id, ", ", state, ",", vol.create_time, ", ", vol.size)
+          vol.delete()
+
 
 
 
