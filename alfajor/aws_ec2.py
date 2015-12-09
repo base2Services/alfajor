@@ -284,6 +284,7 @@ class EC2(AWS_BASE):
   # VolumeKeepTag - Name:KeepThisVolume, Value:True
   def delete_unattached_volumes_with_keeptag(self, volumekeeptag=None):
     allvols = self.get_conn().get_all_volumes()
+    counter = 0
     for vol in allvols:
         state = vol.attachment_state()
         # delete if KeepThisVolume does not exist (not set for a vol) and volume is unattached
