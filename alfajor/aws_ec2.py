@@ -282,7 +282,7 @@ class EC2(AWS_BASE):
 
 
   # VolumeKeepTag - Name:KeepThisVolume, Value:True
-  def delete_unattached_volumes_with_keeptag(self, volumekeeptag):
+  def delete_unattached_volumes_with_keeptag(self, volumekeeptag=None):
     allvols = self.get_conn().get_all_volumes()
     for vol in allvols:
         state = vol.attachment_state()
