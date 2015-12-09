@@ -288,11 +288,13 @@ class EC2(AWS_BASE):
         state = vol.attachment_state()
         # delete if KeepThisVolume does not exist (not set for a vol) and volume is unattached
         # ToDo: add logic to check whether TagName has TagValue. all volumes need to be tagged with KeepThisVolume first
-        if volumekeeptag not in vol.tags and state == None:
-          counter = counter + 1
-          loginstance = AWS_BASE()
-          loginstance.log("Unattached: ", counter, ", ", vol.id, ", ", state, ",", vol.create_time, ", ", vol.size)
-          vol.delete()
+        if state == None:
+            loginstance = AWS_BASE()
+            loginstance.log("VolumeKeepTag: ", volumekeeptag, ", ", vol.id, ", ", vol.tags)
+            if volumekeeptag not in vol.tags:
+              counter = counter + 1
+              loginstance.log("Unattached: ", counter, ", ", vol.id, ", ", state, ",", vol.create_time, ", ", vol.size)
+              vol.delete()
 
 
 
