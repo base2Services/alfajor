@@ -12,6 +12,6 @@ if len(sys.argv) < 3:
       volumekeeptag = sys.argv[2]
 
 
-ec2 = aws_ec2.EC2(debug = True, verbose = True, account = account, volumekeeptag = volumekeeptag)
+ec2 = aws_ec2.EC2(debug = True, verbose = True, account = account)
 #ec2.delete_unattached_volumes()
-ec2.delete_unattached_volumes_with_keeptag(volumekeeptag)
+ec2.delete_unattached_volumes_with_keeptag(volumekeeptag = volumekeeptag)
