@@ -12,6 +12,7 @@ class AWS_BASE(object):
   _connection_settings = None
   _conn = None
   _account = None
+  _volumekeeptag = None
   _config_file = None
   _debug = None
   _verbose = None
@@ -21,6 +22,7 @@ class AWS_BASE(object):
   def __init__(self, **kwargs):
     self._config_file = kwargs.get('config_file', 'aws_config.yml')
     self._account = kwargs.get('account', 'default')
+    self._volumekeeptag = kwargs.get('volumekeeptag', 'KeepThisVolume')
     self._notifications = kwargs.get('notifications', False)
     self._config = Config(account = self._account)
     self._connection_settings = self._config.get_connection_dictionary()
