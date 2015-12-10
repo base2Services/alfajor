@@ -296,7 +296,7 @@ class EC2(AWS_BASE):
             if self.keeptag not in vol.tags:
               counter = counter + 1
               loginstance.log("Unattached: ", counter, ", ", vol.id, ", ", state, ",", vol.create_time, ", ", vol.size)
-              #vol.delete()
+              vol.delete()
 
 
 
@@ -328,7 +328,40 @@ class EC2(AWS_BASE):
 
 #TODO: add tag
 #TODO: startup
+  def start_instance_with_tag(self, insttag, env, tier):
+      self.instancetag = insttag
+      self.environment = env
+      self.stacktier = tier
+      reservations = self.get_conn().get_all_instances()
+      counter = 0
+      for res in reservations:
+        for instance in res.instances:
+          # check if stopped
+          if instance.state == 'stopped':
+            if self.instancetag in instance.tags and self.environment in instance.tags and self.stacktier in instance.tags:
+              counter = counter + 1
+              loginstance = AWS_BASE()
+              loginstance.log("Starting instance: ", counter, ", ", instance.id)
+              #instance.start()
+
+
 #TODO: shutdown
+  def stop_instance_with_tag(self, insttag, env, tier):
+      self.instancetag = insttag
+      self.environment = env
+      self.stacktier = tier
+      reservations = self.get_conn().get_all_instances()
+      counter = 0
+      for res in reservations:
+        for instance in res.instances:
+          # check if stopped
+          if instance.state == 'running':
+            if self.instancetag in instance.tags and self.environment in instance.tags and self.stacktier in instance.tags:
+              counter = counter + 1
+              loginstance = AWS_BASE()
+              loginstance.log("Stopping instance: ", counter, ", ", instance.id)
+              #instance.stop()
+
 #TODO: clean no tag with grace days
 #TODO: sns notify
 #TODO: list orphan snapshots
