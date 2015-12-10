@@ -295,7 +295,7 @@ class EC2(AWS_BASE):
             if volumekeeptag not in vol.tags:
               counter = counter + 1
               loginstance.log("Unattached: ", counter, ", ", vol.id, ", ", state, ",", vol.create_time, ", ", vol.size)
-              vol.delete()
+              #vol.delete()
 
 
 
