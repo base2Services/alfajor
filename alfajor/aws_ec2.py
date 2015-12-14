@@ -265,7 +265,7 @@ class EC2(AWS_BASE):
       #TODO: self.clean_volume_backups(tag)
       self.backup_volumes(tag)
 
-
+# tag = MakeSnapshot
 
   def delete_unattached_volumes(self, KeepThisVolume = None):
     counter = 0
@@ -305,15 +305,20 @@ class EC2(AWS_BASE):
     vols = self.get_tagged_volumes(tag, "true")
     date_string = self.get_date_string()
     #name = self.get_instance_name(instance) + "-" + self.get_date_string()
+    self.volumetag = tag
     for vol in vols:
       #new_tag = vol.id + "-" + self.get_date_string()
       #TODO: = tags and volume name
       description = self.description_start() + ": created_at:" + date_string + " original_volume:" + vol.id
       try:
-        self.log("creating snapshot for volume:", vol.id)
-        new_snapshot = vol.create_snapshot(description)
-        #tags
-        #get snapshot adn apply tags
+        if self.volumetag in vol.tags:
+          self.log("creating snapshot for volume:", vol.id)
+          ##new_snapshot = vol.create_snapshot(description)
+          vol.create_snapshot(vol.id,description)
+
+
+          #tags
+          #get snapshot adn apply tags
       except:
         self.log("caught exception - sleeping ", self.get_default_wait)
         self.log(sys.exc_info()[0])
@@ -342,7 +347,7 @@ class EC2(AWS_BASE):
               counter = counter + 1
               loginstance = AWS_BASE()
               loginstance.log("Starting instance: ", counter, ", ", instance.id)
-              #instance.start()
+              instance.start()
 
 
 #TODO: shutdown
@@ -360,7 +365,7 @@ class EC2(AWS_BASE):
               counter = counter + 1
               loginstance = AWS_BASE()
               loginstance.log("Stopping instance: ", counter, ", ", instance.id)
-              #instance.stop()
+              instance.stop()
 
 #TODO: clean no tag with grace days
 #TODO: sns notify
