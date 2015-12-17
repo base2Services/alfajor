@@ -7,7 +7,7 @@ account = "default"
 if len(sys.argv) < 2:
       account = sys.argv[1]
 
-volumekeeptag = "KeepThisVolume"
+volumekeeptag = "MakeSnapshot"
 if len(sys.argv) < 3:
       volumekeeptag = sys.argv[2]
 
