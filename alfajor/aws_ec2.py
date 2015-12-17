@@ -295,7 +295,7 @@ class EC2(AWS_BASE):
             loginstance.log("VolumeKeepTag: ", self.keeptag, ", ", vol.id, ", ", vol.tags)
             if self.keeptag not in vol.tags:
               counter = counter + 1
-              loginstance.log("Unattached: ", counter, ", ", vol.id, ", ", state, ",", vol.create_time, ", ", vol.size)
+              loginstance.log("Deleting: ", counter, ", ", vol.id, ", ", state, ",", vol.create_time, ", ", vol.size)
               vol.delete()
 
 
@@ -312,13 +312,26 @@ class EC2(AWS_BASE):
       description = self.description_start() + ": created_at:" + date_string + " original_volume:" + vol.id
       try:
         if self.volumetag in vol.tags:
-          self.log("creating snapshot for volume:", vol.id)
+          loginstance = AWS_BASE()
+          loginstance.log("Creating snapshot for volume:", vol.id)
           ##new_snapshot = vol.create_snapshot(description)
-          vol.create_snapshot(vol.id,description)
+          snap = vol.create_snapshot(vol.id,description)
+          loginstance.log("Waiting for snapshot status completed..")
+          while snap.status != 'completed':
+            snap.update()
+            print snap.status
+            time.sleep(5)
+            if snap.status == 'completed':
+              volsnapshot = vol.snapshots()
+              loginstance.log("Adding ", self.volumetag, " tag to: ", volsnapshot)
+              volsnapshot.add_tag(volumetag,"true")
+              break
 
 
           #tags
           #get snapshot adn apply tags
+          
+          
       except:
         self.log("caught exception - sleeping ", self.get_default_wait)
         self.log(sys.exc_info()[0])
