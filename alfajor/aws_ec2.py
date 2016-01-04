@@ -266,37 +266,36 @@ class EC2(AWS_BASE):
       self.backup_volumes(tag)
 
 # tag = MakeSnapshot
-
-  def delete_unattached_volumes(self, KeepThisVolume = None):
-    counter = 0
-    vols = self.get_conn().get_all_volumes()
-    for vol in vols:
-      state = vol.attachment_state()
-      if state == None:
-        counter = counter + 1
-        loginstance = AWS_BASE()
-        loginstance.log("Unattached: ", counter, ", ", vol.id, ", ", state, ",", vol.create_time, ", ", vol.size)
-        vol.delete()
+  # ToDo: delete vols if no tags set 
+  #def delete_unattached_volumes(self, volumekeeptag == "None"):
+  #  counter = 0
+  #  vols = self.get_conn().get_all_volumes()
+  #  for vol in vols:
+  #    state = vol.attachment_state()
+  #    if state == None:
+  #      counter = counter + 1
+  #      loginstance = AWS_BASE()
+  #      loginstance.log("Unattached: ", counter, ", ", vol.id, ", ", state, ",", vol.create_time, ", ", vol.size)
+  #      vol.delete()
 
   # ToDo: delete_unattached_volumes_keeptag_configfile():
 
 
-  # VolumeKeepTag - Name:KeepThisVolume, Value:True
+  # VolumeKeepTag - Name:MakeSnapshot, Value:True
   def delete_unattached_volumes_with_keeptag(self, volumekeeptag):
     allvols = self.get_conn().get_all_volumes()
     counter = 0
     self.keeptag = volumekeeptag
     for vol in allvols:
         state = vol.attachment_state()
-        # delete if KeepThisVolume does not exist (not set for a vol) and volume is unattached
-        # ToDo: add logic to check whether TagName has TagValue. all volumes need to be tagged with KeepThisVolume first
+        # delete if MakeSnapshot does not exist (not set for a vol) and volume is unattached
         if state == None:
             loginstance = AWS_BASE()
             loginstance.log("VolumeKeepTag: ", self.keeptag, ", ", vol.id, ", ", vol.tags)
             if self.keeptag not in vol.tags:
               counter = counter + 1
               loginstance.log("Deleting: ", counter, ", ", vol.id, ", ", state, ",", vol.create_time, ", ", vol.size)
-              #vol.delete()
+              vol.delete()
 
 
 
