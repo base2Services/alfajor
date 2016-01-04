@@ -296,7 +296,7 @@ class EC2(AWS_BASE):
             if self.keeptag not in vol.tags:
               counter = counter + 1
               loginstance.log("Deleting: ", counter, ", ", vol.id, ", ", state, ",", vol.create_time, ", ", vol.size)
-              vol.delete()
+              #vol.delete()
 
 
 
