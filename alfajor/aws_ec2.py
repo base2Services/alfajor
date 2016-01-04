@@ -265,34 +265,37 @@ class EC2(AWS_BASE):
       #TODO: self.clean_volume_backups(tag)
       self.backup_volumes(tag)
 
-
-
-  def delete_unattached_volumes(self, KeepThisVolume = None):
-    counter = 0
-    vols = self.get_conn().get_all_volumes()
-    for vol in vols:
-      state = vol.attachment_state()
-      if state == None:
-        counter = counter + 1
-        loginstance = AWS_BASE()
-        loginstance.log("Unattached: ", counter, ", ", vol.id, ", ", state, ",", vol.create_time, ", ", vol.size)
-        vol.delete()
+# tag = MakeSnapshot
+  # ToDo: delete vols if no tags set 
+  #def delete_unattached_volumes(self, volumekeeptag == "None"):
+  #  counter = 0
+  #  vols = self.get_conn().get_all_volumes()
+  #  for vol in vols:
+  #    state = vol.attachment_state()
+  #    if state == None:
+  #      counter = counter + 1
+  #      loginstance = AWS_BASE()
+  #      loginstance.log("Unattached: ", counter, ", ", vol.id, ", ", state, ",", vol.create_time, ", ", vol.size)
+  #      vol.delete()
 
   # ToDo: delete_unattached_volumes_keeptag_configfile():
 
 
-  # VolumeKeepTag - Name:KeepThisVolume, Value:True
+  # VolumeKeepTag - Name:MakeSnapshot, Value:True
   def delete_unattached_volumes_with_keeptag(self, volumekeeptag):
     allvols = self.get_conn().get_all_volumes()
+    counter = 0
+    self.keeptag = volumekeeptag
     for vol in allvols:
         state = vol.attachment_state()
-        # delete if KeepThisVolume does not exist (not set for a vol) and volume is unattached
-        # ToDo: add logic to check whether TagName has TagValue. all volumes need to be tagged with KeepThisVolume first
-        if volumekeeptag not in vol.tags and state == None:
-          counter = counter + 1
-          loginstance = AWS_BASE()
-          loginstance.log("Unattached: ", counter, ", ", vol.id, ", ", state, ",", vol.create_time, ", ", vol.size)
-          vol.delete()
+        # delete if MakeSnapshot does not exist (not set for a vol) and volume is unattached
+        if state == None:
+            loginstance = AWS_BASE()
+            loginstance.log("VolumeKeepTag: ", self.keeptag, ", ", vol.id, ", ", vol.tags)
+            if self.keeptag not in vol.tags:
+              counter = counter + 1
+              loginstance.log("Deleting: ", counter, ", ", vol.id, ", ", state, ",", vol.create_time, ", ", vol.size)
+              vol.delete()
 
 
 
@@ -301,15 +304,33 @@ class EC2(AWS_BASE):
     vols = self.get_tagged_volumes(tag, "true")
     date_string = self.get_date_string()
     #name = self.get_instance_name(instance) + "-" + self.get_date_string()
+    self.volumetag = tag
     for vol in vols:
       #new_tag = vol.id + "-" + self.get_date_string()
       #TODO: = tags and volume name
       description = self.description_start() + ": created_at:" + date_string + " original_volume:" + vol.id
       try:
-        self.log("creating snapshot for volume:", vol.id)
-        new_snapshot = vol.create_snapshot(description)
-        #tags
-        #get snapshot adn apply tags
+        if self.volumetag in vol.tags:
+          loginstance = AWS_BASE()
+          loginstance.log("Creating snapshot for volume:", vol.id)
+          ##new_snapshot = vol.create_snapshot(description)
+          snap = vol.create_snapshot(vol.id,description)
+          loginstance.log("Waiting for snapshot status completed..")
+          while snap.status != 'completed':
+            snap.update()
+            print snap.status
+            time.sleep(5)
+            if snap.status == 'completed':
+              volsnapshot = vol.snapshots()
+              loginstance.log("Adding ", self.volumetag, " tag to: ", volsnapshot)
+              volsnapshot.add_tag(volumetag,"true")
+              break
+
+
+          #tags
+          #get snapshot adn apply tags
+          
+          
       except:
         self.log("caught exception - sleeping ", self.get_default_wait)
         self.log(sys.exc_info()[0])
@@ -324,7 +345,40 @@ class EC2(AWS_BASE):
 
 #TODO: add tag
 #TODO: startup
+  def start_instance_with_tag(self, insttag, env, tier):
+      self.instancetag = insttag
+      self.environment = env
+      self.stacktier = tier
+      reservations = self.get_conn().get_all_instances()
+      counter = 0
+      for res in reservations:
+        for instance in res.instances:
+          # check if stopped
+          if instance.state == 'stopped':
+            if self.instancetag in instance.tags and self.environment in instance.tags and self.stacktier in instance.tags:
+              counter = counter + 1
+              loginstance = AWS_BASE()
+              loginstance.log("Starting instance: ", counter, ", ", instance.id)
+              instance.start()
+
+
 #TODO: shutdown
+  def stop_instance_with_tag(self, insttag, env, tier):
+      self.instancetag = insttag
+      self.environment = env
+      self.stacktier = tier
+      reservations = self.get_conn().get_all_instances()
+      counter = 0
+      for res in reservations:
+        for instance in res.instances:
+          # check if stopped
+          if instance.state == 'running':
+            if self.instancetag in instance.tags and self.environment in instance.tags and self.stacktier in instance.tags:
+              counter = counter + 1
+              loginstance = AWS_BASE()
+              loginstance.log("Stopping instance: ", counter, ", ", instance.id)
+              instance.stop()
+
 #TODO: clean no tag with grace days
 #TODO: sns notify
 #TODO: list orphan snapshots

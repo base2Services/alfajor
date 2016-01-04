@@ -7,11 +7,17 @@ account = "default"
 if len(sys.argv) < 2:
       account = sys.argv[1]
 
-volumekeeptag = "MakeSnapshot"
+insttag = "tag"
 if len(sys.argv) < 3:
-      volumekeeptag = sys.argv[2]
+      insttag = sys.argv[2]
 
+env = "env"
+if len(sys.argv) < 4:
+      env = sys.argv[3]
+
+tier = "tier"
+if len(sys.argv) < 5:
+      tier = sys.argv[4]
 
 ec2 = aws_ec2.EC2(debug = True, verbose = True, account = account)
-#ec2.delete_unattached_volumes()
-ec2.delete_unattached_volumes_with_keeptag(volumekeeptag)
+ec2.stop_instance_with_tag(insttag, env, tier)
