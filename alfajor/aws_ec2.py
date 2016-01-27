@@ -123,10 +123,23 @@ class EC2(AWS_BASE):
       #TODO: tag retention date
       for tag in s_tags:
         new_tags[tag] = s_tags[tag]
-      self.set_tags(new_image, new_tags)
+      self.set_tags_eventually_consistent(new_image, new_tags, wait = 45, retries =3)
 
     return image_id
 
+  def set_tags_eventually_consistent(self, resource, tags, wait = 45, retries = 3):
+    counter = 0
+
+    while counter < retries:
+      try:
+        self.set_tags(resource, tags)
+      except:
+        self.log("caught exception - sleeping ", wait ," then try set tags again")
+        self.log(sys.exc_info()[0])
+        time.sleep(float(wait))
+      counter = counter + 1
+
+    return None
 
   def get_image_eventually_consistent(self, image_id, wait = 45, retries = 3):
     counter = 0
