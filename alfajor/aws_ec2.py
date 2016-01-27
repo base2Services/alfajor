@@ -225,7 +225,9 @@ class EC2(AWS_BASE):
 
     while counter < retries:
       try:
-        image.deregister(delete_snapshot=True)
+        #image.deregister(delete_snapshot=True)
+        self.debug("deregister for " + str(image.id))
+        self.get_conn().deregister_image(image.id, delete_snapshot=True)
         return True
       except:
         self.log("caught exception - sleeping ", wait ," will then try deregister image again")
@@ -266,7 +268,7 @@ class EC2(AWS_BASE):
       self.backup_volumes(tag)
 
 # tag = MakeSnapshot
-  # ToDo: delete vols if no tags set 
+  # ToDo: delete vols if no tags set
   #def delete_unattached_volumes(self, volumekeeptag == "None"):
   #  counter = 0
   #  vols = self.get_conn().get_all_volumes()
@@ -329,8 +331,8 @@ class EC2(AWS_BASE):
 
           #tags
           #get snapshot adn apply tags
-          
-          
+
+
       except:
         self.log("caught exception - sleeping ", self.get_default_wait)
         self.log(sys.exc_info()[0])
