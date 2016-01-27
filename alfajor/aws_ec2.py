@@ -226,6 +226,7 @@ class EC2(AWS_BASE):
     while counter < retries:
       try:
         #image.deregister(delete_snapshot=True)
+        self.debug("deregister for " + str(image.id))
         self.get_conn().deregister_image(image.id, delete_snapshot=True)
         return True
       except:
