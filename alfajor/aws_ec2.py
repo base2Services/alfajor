@@ -36,7 +36,7 @@ class EC2(AWS_BASE):
       if (condition == "all") or (vol.attachment_state() == condition):
         self.log("state: ", vol.attachment_state())
         counter = counter + 1
-        log("Unattached: ", counter, ", ", vol.id, ", ", state, ",", vol.create_time, ", ", vol.size)
+        log("Volume: ", counter, ", ", vol.id, ", ", state, ",", vol.create_time, ", ", vol.size)
     return vols
 
 
@@ -107,14 +107,14 @@ class EC2(AWS_BASE):
     name = self.get_instance_name(instance) + "-" + self.get_date_string()
     description = self.description_start() + ": copy_of:" + name + " created_at:" + date_string + " original_instance:" + instance.id
     image_id = instance.create_image(name, description, no_reboot)
-    self.log("backup for:", instance.id)
+    self.log("start backup for:", instance.id)
 
     self.log(image_id)
     #TODO: handle boto.exception.EC2ResponseError: for eventual consistency: try catch
     new_image = self.get_image_eventually_consistent(image_id, self.get_default_wait())
 
     if new_image is None:
-      self.freakout(new_image, "is none")
+      self.freakout(new_image, " is none")
     else:
       new_tags = instance.tags
       s_tags = self.get_snapshot_tags()
@@ -222,11 +222,7 @@ class EC2(AWS_BASE):
       self.verbose("days since creation: " + str(days_since_creation))
 
       if days_since_creation > days_to_keep:
-        self.debug(image.id + " is going to be deregistered")
-        self.debug("description " + image.description)
-        self.debug("creation_date: " + str(image.creationDate))
-        self.debug("tags:" + str(image.tags))
-        self.debug("Days since creation is : " + str(days_since_creation))
+        self.debug(image.id + " is going to be deregistered. description: " + image.description + " creation_date: " + str(image.creationDate) + "tags:" + str(image.tags) + "Days since creation is : " + str(days_since_creation))
         #self.debug(image.block_device_mapping.current_value.snapshot_id)
         if delete:
           self.deregister_image_eventually_consistent(image, self.get_default_wait)

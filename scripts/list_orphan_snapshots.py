@@ -53,12 +53,12 @@ for snapshot in all_snapshots:
     else:
       snapshots_no_ami[snapshotId] = { 'ami' : amiId, "start_time" : snapshot.start_time}
 
-f.write("Total amis " + str(len(images)) + "\n")
-f.write("Total snapshots " + str(count_snapshots) + "\n")
-f.write("Total snapshots_no_info " + str(len(snapshots_no_info)) + "\n")
-f.write("Total snapshosts_no_ami (but has ami ref) " + str(len(snapshots_no_ami)) + "\n")
-f.write("Total snapshosts_with_ami (ami exists) " + str(len(snapshots_with_ami)) + "\n")
-f.write("Total snapshosts_with_vol " + str(len(snapshots_with_vol_info)) + "\n")
+print("Total amis " + str(len(images)) + "\n")
+print("Total snapshots " + str(count_snapshots) + "\n")
+print("Total snapshots_no_info " + str(len(snapshots_no_info)) + "\n")
+print("Total snapshosts_no_ami (but has ami ref) " + str(len(snapshots_no_ami)) + "\n")
+print("Total snapshosts_with_ami (ami exists) " + str(len(snapshots_with_ami)) + "\n")
+print("Total snapshosts_with_vol " + str(len(snapshots_with_vol_info)) + "\n")
 
 test_result = count_snapshots - (len(snapshots_no_info) + len(snapshots_no_ami) + len(snapshots_with_ami) + len(snapshots_with_vol_info))
 print "snapshots - snapshots not accounted for (should be 0) " + str(test_result)
@@ -70,10 +70,10 @@ def get_days(str):
 
 def print_results(data):
   for key,value in data.items():
-    output = "snapshot: " + str(key)
+    output = str(key)
+    output = output + "\t" + str(get_days(value['start_time']))
     for k,v in value.items():
-      output = output + " " + k + ": " + str(v)
-    output = output + " days: " + str(get_days(value['start_time']))
+      output = output + "\t" + k + "\t" + str(v)
     f.write(output + "\n")
 
 f.write("""
