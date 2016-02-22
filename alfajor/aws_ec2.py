@@ -325,7 +325,7 @@ class EC2(AWS_BASE):
           loginstance = AWS_BASE()
           loginstance.log("Creating snapshot for volume:", vol.id)
           ##new_snapshot = vol.create_snapshot(description)
-          snap = self.get_conn().create_snapshot(vol.id,description)
+          snap = vol.create_snapshot(vol.id,description)
           loginstance.log("Waiting for snapshot status completed..")
           while snap.status != 'completed':
             snap.update()
