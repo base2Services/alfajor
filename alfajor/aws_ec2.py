@@ -59,6 +59,7 @@ class EC2(AWS_BASE):
 
   def get_tagged_reservations(self, tag = "Name", value = "*"):
     print "debug in get_tagged_reseravations"
+    print len(self.get_conn().get_all_instances(filters={"tag:" + tag : value}))
     return self.get_conn().get_all_instances(filters={"tag:" + tag : value})
 
 
