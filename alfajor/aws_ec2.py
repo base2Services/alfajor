@@ -58,8 +58,8 @@ class EC2(AWS_BASE):
 
 
   def get_tagged_reservations(self, tag = "Name", value = "*"):
-    print "debug in get_tagged_reseravations"
-    print len(self.get_conn().get_all_instances(filters={"tag:" + tag : value}))
+    #print "debug in get_tagged_reseravations"
+    #print len(self.get_conn().get_all_instances(filters={"tag:" + tag : value}))
     return self.get_conn().get_all_instances(filters={"tag:" + tag : value})
 
 
@@ -314,14 +314,18 @@ class EC2(AWS_BASE):
 
 
   def backup_volumes(self, tag):
+    print "backup volumes"
     vols = self.get_tagged_volumes(tag, "true")
+    print len(vols)
     date_string = self.get_date_string()
     #name = self.get_instance_name(instance) + "-" + self.get_date_string()
+    
     self.volumetag = tag
     for vol in vols:
       #new_tag = vol.id + "-" + self.get_date_string()
       #TODO: = tags and volume name
       description = self.description_start() + ": created_at:" + date_string + " original_volume:" + vol.id
+      print description
       try:
         if self.volumetag in vol.tags:
           loginstance = AWS_BASE()
