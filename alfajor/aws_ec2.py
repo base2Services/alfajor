@@ -326,14 +326,10 @@ class EC2(AWS_BASE):
       #TODO: = tags and volume name
       description = self.description_start() + ": created_at:" + date_string + " original_volume:" + vol.id
       try:
-        print vol.tags
         if self.volumetag in vol.tags:
           #loginstance = AWS_BASE()
           #loginstance.log("Creating snapshot for volume:", vol.id)
           ##new_snapshot = vol.create_snapshot(description)
-          print "2"
-          print vol.id
-          print description
           snap = self.get_conn().create_snapshot(vol.id,description)
           #loginstance.log("Waiting for snapshot status completed..")
           print "3"
@@ -345,15 +341,14 @@ class EC2(AWS_BASE):
             if snap.status == 'completed':
               print "6"
               volsnapshot = vol.snapshots()
-              loginstance.log("Adding ", self.volumetag, " tag to: ", volsnapshot)
-              volsnapshot.add_tag(volumetag,"true")
               print "7"
+              #loginstance.log("Adding ", self.volumetag, " tag to: ", volsnapshot)
+              volsnapshot.add_tag(volumetag,"true")
+              print "8"
               break
-
 
           #tags
           #get snapshot adn apply tags
-
 
       except:
         self.log("caught exception - sleeping ", self.get_default_wait)
