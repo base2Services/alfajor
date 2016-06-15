@@ -319,7 +319,7 @@ class EC2(AWS_BASE):
     print len(vols)
     date_string = self.get_date_string()
     #name = self.get_instance_name(instance) + "-" + self.get_date_string()
-    
+
     self.volumetag = tag
     for vol in vols:
       new_tag = vol.id + "-" + self.get_date_string()
@@ -332,20 +332,21 @@ class EC2(AWS_BASE):
           ##new_snapshot = vol.create_snapshot(description)
           snap = self.get_conn().create_snapshot(vol.id,description)
           #loginstance.log("Waiting for snapshot status completed..")
-          print "3"
-          while snap.status != 'completed':
-            snap.update()
-            print snap.status
-            time.sleep(5)
-            print "4"
-            if snap.status == 'completed':
-              print "6"
-              volsnapshot = vol.snapshots()
-              print "7"
-              #loginstance.log("Adding ", self.volumetag, " tag to: ", volsnapshot)
-              volsnapshot.add_tag(volumetag,"true")
-              print "8"
-              break
+          snap.add_tag(volumetag,"true")
+          # 
+        #   while snap.status != 'completed':
+        #     snap.update()
+        #     print snap.status
+        #     time.sleep(5)
+        #     print "4"
+        #     if snap.status == 'completed':
+        #       print "6"
+        #       volsnapshot = vol.snapshots()
+        #       print "7"
+        #       #loginstance.log("Adding ", self.volumetag, " tag to: ", volsnapshot)
+        #       volsnapshot.add_tag(volumetag,"true")
+        #       print "8"
+        #       break
 
           #tags
           #get snapshot adn apply tags
