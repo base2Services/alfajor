@@ -316,23 +316,25 @@ class EC2(AWS_BASE):
   def backup_volumes(self, tag):
     print "backup volumes"
     vols = self.get_tagged_volumes(tag, "true")
-    print len(vols)
+        print len(vols)
     date_string = self.get_date_string()
 
     for vol in vols:
       new_tag = vol.id + "-" + self.get_date_string()
       #TODO: = tags and volume name
       description = self.description_start() + ": created_at:" + date_string + " original_volume:" + vol.id
-      try:
-        snap = self.get_conn().create_snapshot(vol.id,description)
-        snap.add_tag(volumetag,"true")
+      print description
+      #try:
+      snap = self.get_conn().create_snapshot(vol.id,description)
+      print "now tag"
+      snap.add_tag(volumetag,"true")
       #tags
       #get snapshot adn apply tags
-
-      except:
-        self.log("caught exception - sleeping ", self.get_default_wait)
-        self.log(sys.exc_info()[0])
-        time.sleep(self.get_default_wait())
+      #
+    #   except:
+    #     self.log("caught exception - sleeping ", self.get_default_wait)
+    #     self.log(sys.exc_info()[0])
+    #     time.sleep(self.get_default_wait())
 
 
   def get_tagged_volumes(self, tag = "Name", value = "*"):
