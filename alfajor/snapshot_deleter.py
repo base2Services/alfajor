@@ -77,12 +77,16 @@ class SnapShotDeleter(AWS_BASE):
           snapshots_no_info[snapshotId] = {"start_time" : snapshot.start_time}
         else:
           #debug-riko
+          print ("Snapshot ID=" + str(snapshotId) + "\n")
           print ("volIdResult[0]=" + str(volIdResult[0]) + "\n")
           print ("info=" + str(volumes[volIdResult[0]]) + "\n")
-          print ("start time=" + str(snapshot.start_time))
+          print ("start time=" + str(snapshot.start_time) + "\n")
 
           #failed ami regex but matched vol regex
-          snapshots_with_vol_info[snapshotId] = { 'vol' : volIdResult[0], 'info' : volumes[volIdResult[0]], "start_time" : snapshot.start_time}
+          try:
+            snapshots_with_vol_info[snapshotId] = { 'vol' : volIdResult[0], 'info' : volumes[volIdResult[0]], "start_time" : snapshot.start_time}
+          except:
+            snapshots_with_vol_info[snapshotId] = { 'vol' : volIdResult[0], 'info' : "volume not found", "start_time" : snapshot.start_time}
       else:
         #extracted amiIdResult above based on regex
         #now lets see if it is in the list of current images
