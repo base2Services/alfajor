@@ -327,20 +327,27 @@ class EC2(AWS_BASE):
       description = self.description_start() + ": created_at:" + date_string + " original_volume:" + vol.id
       print description
       try:
+        print vol.tags
+        print "1"
         if self.volumetag in vol.tags:
+          print "2"
           loginstance = AWS_BASE()
           loginstance.log("Creating snapshot for volume:", vol.id)
           ##new_snapshot = vol.create_snapshot(description)
           snap = self.get_conn().create_snapshot(vol.id,description)
           loginstance.log("Waiting for snapshot status completed..")
+          print "3"
           while snap.status != 'completed':
             snap.update()
             print snap.status
             time.sleep(5)
+            print "4"
             if snap.status == 'completed':
+              print "6"
               volsnapshot = vol.snapshots()
               loginstance.log("Adding ", self.volumetag, " tag to: ", volsnapshot)
               volsnapshot.add_tag(volumetag,"true")
+              print "7"
               break
 
 
