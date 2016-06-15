@@ -318,38 +318,16 @@ class EC2(AWS_BASE):
     vols = self.get_tagged_volumes(tag, "true")
     print len(vols)
     date_string = self.get_date_string()
-    #name = self.get_instance_name(instance) + "-" + self.get_date_string()
 
-    self.volumetag = tag
     for vol in vols:
       new_tag = vol.id + "-" + self.get_date_string()
       #TODO: = tags and volume name
       description = self.description_start() + ": created_at:" + date_string + " original_volume:" + vol.id
       try:
-        if self.volumetag in vol.tags:
-          #loginstance = AWS_BASE()
-          #loginstance.log("Creating snapshot for volume:", vol.id)
-          ##new_snapshot = vol.create_snapshot(description)
-          snap = self.get_conn().create_snapshot(vol.id,description)
-          #loginstance.log("Waiting for snapshot status completed..")
-          snap.add_tag(volumetag,"true")
-          # 
-        #   while snap.status != 'completed':
-        #     snap.update()
-        #     print snap.status
-        #     time.sleep(5)
-        #     print "4"
-        #     if snap.status == 'completed':
-        #       print "6"
-        #       volsnapshot = vol.snapshots()
-        #       print "7"
-        #       #loginstance.log("Adding ", self.volumetag, " tag to: ", volsnapshot)
-        #       volsnapshot.add_tag(volumetag,"true")
-        #       print "8"
-        #       break
-
-          #tags
-          #get snapshot adn apply tags
+        snap = self.get_conn().create_snapshot(vol.id,description)
+        snap.add_tag(volumetag,"true")
+      #tags
+      #get snapshot adn apply tags
 
       except:
         self.log("caught exception - sleeping ", self.get_default_wait)
