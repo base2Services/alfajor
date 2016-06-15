@@ -223,6 +223,7 @@ class AWS_BASE(object):
 
 
   def get_default_wait(self):
+    print "wait is 45"
     return 45
 
   def description_start(self):
