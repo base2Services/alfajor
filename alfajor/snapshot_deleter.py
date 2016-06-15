@@ -44,8 +44,6 @@ class SnapShotDeleter(AWS_BASE):
         name = v.tags['Name']
 
       volumes[v.id] = {'status' : v.status, 'Name' : name}
-      #debug-riko
-      print ("working on name=" + str(name) + " status=" + str(v.status)+ "\n")
 
     #get a list of all our amis for use later
     for image in self.get_conn().get_all_images(owners=['self']):
@@ -53,8 +51,6 @@ class SnapShotDeleter(AWS_BASE):
 
     all_snapshots = self.get_conn().get_all_snapshots(owner='self')
     count_snapshots = len(all_snapshots)
-    #debug-riko
-    print ("total snapshot=" + str(count_snapshots) + "\n")
 
     #parse snapshots and breakdown into 4 groups
     #1: no info that is useful
@@ -76,12 +72,6 @@ class SnapShotDeleter(AWS_BASE):
           #has failed both ami and volume reges add to the weird bucket
           snapshots_no_info[snapshotId] = {"start_time" : snapshot.start_time}
         else:
-          #debug-riko
-          print ("Snapshot ID=" + str(snapshotId) + "\n")
-          print ("volIdResult[0]=" + str(volIdResult[0]) + "\n")
-          #print ("info=" + str(volumes[volIdResult[0]]) + "\n")
-          print ("start time=" + str(snapshot.start_time) + "\n")
-
           #failed ami regex but matched vol regex
           try:
             snapshots_with_vol_info[snapshotId] = { 'vol' : volIdResult[0], 'info' : volumes[volIdResult[0]], "start_time" : snapshot.start_time}
