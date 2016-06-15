@@ -322,20 +322,20 @@ class EC2(AWS_BASE):
     
     self.volumetag = tag
     for vol in vols:
-      #new_tag = vol.id + "-" + self.get_date_string()
+      new_tag = vol.id + "-" + self.get_date_string()
       #TODO: = tags and volume name
       description = self.description_start() + ": created_at:" + date_string + " original_volume:" + vol.id
-      print description
       try:
         print vol.tags
-        print "1"
         if self.volumetag in vol.tags:
-          print "2"
-          loginstance = AWS_BASE()
-          loginstance.log("Creating snapshot for volume:", vol.id)
+          #loginstance = AWS_BASE()
+          #loginstance.log("Creating snapshot for volume:", vol.id)
           ##new_snapshot = vol.create_snapshot(description)
+          print "2"
+          print vol.id
+          print description
           snap = self.get_conn().create_snapshot(vol.id,description)
-          loginstance.log("Waiting for snapshot status completed..")
+          #loginstance.log("Waiting for snapshot status completed..")
           print "3"
           while snap.status != 'completed':
             snap.update()
