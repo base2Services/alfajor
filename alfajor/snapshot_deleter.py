@@ -79,13 +79,14 @@ class SnapShotDeleter(AWS_BASE):
           #debug-riko
           print ("Snapshot ID=" + str(snapshotId) + "\n")
           print ("volIdResult[0]=" + str(volIdResult[0]) + "\n")
-          print ("info=" + str(volumes[volIdResult[0]]) + "\n")
+          #print ("info=" + str(volumes[volIdResult[0]]) + "\n")
           print ("start time=" + str(snapshot.start_time) + "\n")
 
           #failed ami regex but matched vol regex
           try:
             snapshots_with_vol_info[snapshotId] = { 'vol' : volIdResult[0], 'info' : volumes[volIdResult[0]], "start_time" : snapshot.start_time}
           except:
+            print ("exception for volume " + volIdResult[0])
             snapshots_with_vol_info[snapshotId] = { 'vol' : volIdResult[0], 'info' : "volume not found", "start_time" : snapshot.start_time}
       else:
         #extracted amiIdResult above based on regex
