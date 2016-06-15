@@ -327,7 +327,8 @@ class EC2(AWS_BASE):
       #try:
       snap = self.get_conn().create_snapshot(vol.id,description)
       print "now tag"
-      snap.add_tag(volumetag,"true")
+      snap.add_tag(tag,"true")
+      snap.add_tag("Created by Alfajor","true")
       #tags
       #get snapshot adn apply tags
       #
