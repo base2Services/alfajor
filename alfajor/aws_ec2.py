@@ -301,7 +301,7 @@ class EC2(AWS_BASE):
 
     for vol in vols:
       counter = 1
-      wait = 10
+      wait = 60
       retries = 3
 
       while counter <= retries:
