@@ -14,15 +14,12 @@ class EC2(AWS_BASE):
     self.set_conn(boto.ec2.connect_to_region(**self.get_connection_settings()))
 
 
-
   def list_attached_volumes(self):
     return self.list_volumes_by_condition("attached")
 
 
-
   def list_all_volumes(self):
     return self.list_volumes_by_condition()
-
 
 
   def list_volumes_by_condition(self, condition = "all"):
@@ -40,21 +37,17 @@ class EC2(AWS_BASE):
     return vols
 
 
-
   def list_unattached_volumes(self):
     return self.list_volumes_by_condition("unattached")
-
 
 
   def list_instances(self):
     self.list_tagged_instances()
 
 
-
   def list_tagged_instances(self, tag = "Name", value = "*"):
     self.list_reservations(self.get_tagged_reservations(tag, value))
     #return count?
-
 
 
   def get_tagged_reservations(self, tag = "Name", value = "*"):
@@ -63,12 +56,10 @@ class EC2(AWS_BASE):
     return self.get_conn().get_all_instances(filters={"tag:" + tag : value})
 
 
-
   def list_reservations(self, reservations):
     for r in reservations:
       for i in r.instances:
         self.print_instance(i)
-
 
 
   def print_instance(self, instance):
@@ -76,13 +67,11 @@ class EC2(AWS_BASE):
     self.log(l)
 
 
-
   def get_instance_name(self, instance):
     name = "-"
     if "Name" in instance.tags:
       name = instance.tags["Name"]
     return name
-
 
 
   def pprint_instance(self, instance):
@@ -95,13 +84,11 @@ class EC2(AWS_BASE):
     return None
 
 
-
   def create_images_from_tag(self, tag = None):
     #get tag if none
     #get instances
     #foreach create image
     return None
-
 
 
   def create_image(self, instance, no_reboot = True):
@@ -143,6 +130,7 @@ class EC2(AWS_BASE):
 
     return None
 
+
   def get_image_eventually_consistent(self, image_id, wait = 45, retries = 3):
     counter = 0
 
@@ -157,7 +145,6 @@ class EC2(AWS_BASE):
       counter = counter + 1
 
     return None
-
 
 
   def get_days_to_keep(self, instance):
@@ -188,7 +175,6 @@ class EC2(AWS_BASE):
     return days_to_keep
 
 
-
   def list_snapshot_for_image(self, image):
     snapshots = self.get_conn().get_all_snapshots()
     regex_ami = re.compile('ami-[^ ]+')
@@ -203,7 +189,6 @@ class EC2(AWS_BASE):
       if snapshot_versus_ami[s] == image.id:
         s = "snapshot" + s + " for ami " + snapshot_versus_ami[s] + "\n\n"
         self.log(s)
-
 
 
   #for any instance, delete the ami's (unless keep_flag is defined and true)
@@ -228,7 +213,6 @@ class EC2(AWS_BASE):
         #self.debug(image.block_device_mapping.current_value.snapshot_id)
         if delete:
           self.deregister_image_eventually_consistent(image, self.get_default_wait)
-
 
 
   def deregister_image_eventually_consistent(self, image, image_id, wait = 45, retries = 3):
@@ -257,14 +241,12 @@ class EC2(AWS_BASE):
         self.log(self.delete_with_retention(i,True))
 
 
-
   def create_instance_snapshots(self, tag = None):
     reservations = self.get_tagged_reservations(tag, "true")
     self.list_reservations(reservations)
     for r in reservations:
       for i in r.instances:
         self.log(self.create_image(i))
-
 
 
   def create_backups(self, tag = None):
@@ -311,36 +293,37 @@ class EC2(AWS_BASE):
               vol.delete()
 
 
-
-
   def backup_volumes(self, tag):
     print "backup volumes"
     vols = self.get_tagged_volumes(tag, "true")
-    print len(vols)
+    print "Number of volumes found: " + len(vols)
     date_string = self.get_date_string()
 
     for vol in vols:
-      new_tag = vol.id + "-" + self.get_date_string()
-      #TODO: = tags and volume name
-      description = self.description_start() + ": created_at:" + date_string + " original_volume:" + vol.id
-      print description
-      #try:
-      snap = self.get_conn().create_snapshot(vol.id,description)
-      snap.add_tag(tag,"true")
-      snap.add_tag("Created by Alfajor","true")
-      #tags
-      #get snapshot adn apply tags
-      #
-    #   except:
-    #     self.log("caught exception - sleeping ", self.get_default_wait)
-    #     self.log(sys.exc_info()[0])
-    #     time.sleep(self.get_default_wait())
+      counter = 1
+      wait = 10
+      retries = 3
+
+      while counter <= retries:
+        new_tag = vol.id + "-" + self.get_date_string()
+        #TODO: = tags and volume name
+        description = self.description_start() + ": created_at:" + date_string + " original_volume:" + vol.id
+        print description
+        try:
+          print "Backup attempt number " + counter
+          snap = self.get_conn().create_snapshot(vol.id,description)
+          snap.add_tag(tag, "true")
+          snap.add_tag("Created by Alfajor", "true")
+          return True
+        except:
+          self.log("caught exception - sleeping for " + wait + " seconds, will then try image backup again")
+          self.log(sys.exc_info()[0])
+          time.sleep(wait)
+        counter = counter + 1
 
 
   def get_tagged_volumes(self, tag = "Name", value = "*"):
     return self.get_conn().get_all_volumes(filters={"tag:" + tag : value})
-
-
 
 
 #TODO: add tag
