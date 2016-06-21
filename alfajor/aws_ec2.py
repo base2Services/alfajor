@@ -301,7 +301,7 @@ class EC2(AWS_BASE):
 
     for vol in vols:
       counter = 1
-      wait = 60
+      wait = 10
       retries = 3
 
       while counter <= retries:
@@ -314,6 +314,7 @@ class EC2(AWS_BASE):
           snap = self.get_conn().create_snapshot(vol.id,description)
           snap.add_tag(tag, "true")
           snap.add_tag("Created by Alfajor", "true")
+          break
         except:
           self.log("Caught exception - sleeping for %d seconds, will then try image backup again" % (wait))
           self.log(sys.exc_info()[0])
