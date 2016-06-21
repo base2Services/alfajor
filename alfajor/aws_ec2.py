@@ -294,7 +294,7 @@ class EC2(AWS_BASE):
 
 
   def backup_volumes(self, tag):
-    print "backup volumes"
+    print "Backup Volumes"
     vols = self.get_tagged_volumes(tag, "true")
     print "Number of volumes found: %d" % (len(vols))
     date_string = self.get_date_string()
@@ -305,18 +305,18 @@ class EC2(AWS_BASE):
       retries = 3
 
       while counter <= retries:
-        new_tag = vol.id + "-" + self.get_date_string()
-        #TODO: = tags and volume name
-        description = self.description_start() + ": created_at:" + date_string + " original_volume:" + vol.id
-        print description
         try:
           print "Backup attempt number %d" % (counter)
+          new_tag = vol.id + "-" + self.get_date_string()
+          #TODO: = tags and volume name
+          description = self.description_start() + ": created_at:" + date_string + " original_volume:" + vol.id
+          print description
           snap = self.get_conn().create_snapshot(vol.id,description)
           snap.add_tag(tag, "true")
           snap.add_tag("Created by Alfajor", "true")
           return True
         except:
-          self.log("caught exception - sleeping for %d seconds, will then try image backup again" % (wait))
+          self.log("Caught exception - sleeping for %d seconds, will then try image backup again" % (wait))
           self.log(sys.exc_info()[0])
           time.sleep(wait)
         counter = counter + 1
