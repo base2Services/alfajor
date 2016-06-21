@@ -296,7 +296,7 @@ class EC2(AWS_BASE):
   def backup_volumes(self, tag):
     print "backup volumes"
     vols = self.get_tagged_volumes(tag, "true")
-    print "Number of volumes found: " + len(vols)
+    print "Number of volumes found: %d" % (len(vols))
     date_string = self.get_date_string()
 
     for vol in vols:
