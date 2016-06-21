@@ -310,13 +310,13 @@ class EC2(AWS_BASE):
         description = self.description_start() + ": created_at:" + date_string + " original_volume:" + vol.id
         print description
         try:
-          print "Backup attempt number " + counter
+          print "Backup attempt number %d" % (counter)
           snap = self.get_conn().create_snapshot(vol.id,description)
           snap.add_tag(tag, "true")
           snap.add_tag("Created by Alfajor", "true")
           return True
         except:
-          self.log("caught exception - sleeping for " + wait + " seconds, will then try image backup again")
+          self.log("caught exception - sleeping for %d seconds, will then try image backup again" % (wait))
           self.log(sys.exc_info()[0])
           time.sleep(wait)
         counter = counter + 1
