@@ -1,5 +1,7 @@
 import sys
 sys.path.append("alfajor")
+sys.path.append("../alfajor")
+
 import boto
 from alfajor import aws_ec2
 

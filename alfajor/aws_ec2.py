@@ -7,6 +7,7 @@ from datetime import date
 import time
 import re
 import sys
+import os
 
 class EC2(AWS_BASE):
 
@@ -112,7 +113,11 @@ class EC2(AWS_BASE):
       #TODO: tag retention date
       for tag in s_tags:
         new_tags[tag] = s_tags[tag]
+      new_tags['CreatedByAlfajor'] = 'true'
       self.set_tags_eventually_consistent(new_image, new_tags, wait = 45, retries =3)
+
+      # Tag image snapshots for easier management
+      self.tag_snapshots_for_image(new_image)
 
     return image_id
 
@@ -174,6 +179,13 @@ class EC2(AWS_BASE):
     #e.g. 28
     return days_to_keep
 
+  def tag_snapshots_for_image(self, image):
+    filters = { 'description' : "*{0}*".format(image.id)}
+    snapshots = self.get_conn().get_all_snapshots(filters=filters, owner = 'self')
+    for s in snapshots:
+        self.log("tagging snapshot " + s.id + " for ami " + image.id )
+        s.add_tags({'CreatedByAlfajor': 'true', 'ImageId': image.id})
+
 
   def list_snapshot_for_image(self, image):
     snapshots = self.get_conn().get_all_snapshots()
@@ -209,10 +221,30 @@ class EC2(AWS_BASE):
       self.verbose("days since creation: " + str(days_since_creation))
 
       if days_since_creation > days_to_keep:
-        self.debug(image.id + " is going to be deregistered. description: " + image.description + " creation_date: " + str(image.creationDate) + "tags:" + str(image.tags) + "Days since creation is : " + str(days_since_creation))
+        self.log(image.id + " is going to be deregistered. description: " + image.description + " creation_date: " + str(image.creationDate) + "tags:" + str(image.tags) + "Days since creation is : " + str(days_since_creation))
         #self.debug(image.block_device_mapping.current_value.snapshot_id)
         if delete:
           self.deregister_image_eventually_consistent(image, self.get_default_wait)
+          self.delete_ami_snapshots(image)
+
+  def delete_ami_snapshots(self, image):
+    snap_ids = []
+    for mount,device in image.block_device_mapping.iteritems():
+      if device.snapshot_id != None:
+        if device.snapshot_id.startswith("snap-"):
+          snap_ids.append(device.snapshot_id)
+
+    ami_snapshots = []
+    try:
+      ami_snapshots = self.get_conn().get_all_snapshots(snapshot_ids = snap_ids, owner = 'self')
+    except boto.exception.EC2ResponseError as err:
+      self.log("\nERROR | Could not find following AMI snapshots in account: {0}:\n{1}".format(snap_ids,err))
+      
+    # print filters
+    # print ami_snapshots
+    for snapshot in ami_snapshots:
+      self.log("Cleaning up snapshot {0} for ami {1}".format(snapshot.id, image.id))
+      snapshot.delete()
 
 
   def deregister_image_eventually_consistent(self, image, image_id, wait = 45, retries = 3):
@@ -222,7 +254,7 @@ class EC2(AWS_BASE):
       try:
         #image.deregister(delete_snapshot=True)
         self.debug("deregister for " + str(image.id))
-        self.get_conn().deregister_image(image.id, delete_snapshot=True)
+        self.get_conn().deregister_image(image.id)
         return True
       except:
         self.log("caught exception - sleeping ", wait ," will then try deregister image again")
