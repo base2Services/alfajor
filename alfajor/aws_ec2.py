@@ -8,11 +8,13 @@ import time
 import re
 import sys
 import os
+import json
 
 class EC2(AWS_BASE):
 
   def init(self):
     self.set_conn(boto.ec2.connect_to_region(**self.get_connection_settings()))
+    self.__created_amis = []
 
 
   def list_attached_volumes(self):
@@ -93,15 +95,15 @@ class EC2(AWS_BASE):
 
 
   def create_image(self, instance, no_reboot = True):
+    self.log("\n\n==== CREATE AMI FOR INSTANCE {0} ====\n\n".format(instance.id))
     date_string = self.get_date_string()
     name = self.get_instance_name(instance) + "-" + self.get_date_string()
     description = self.description_start() + ": copy_of:" + name + " created_at:" + date_string + " original_instance:" + instance.id
     image_id = instance.create_image(name, description, no_reboot)
-    self.log("start backup for:", instance.id)
 
     self.log(image_id)
     #TODO: handle boto.exception.EC2ResponseError: for eventual consistency: try catch
-    new_image = self.get_image_eventually_consistent(image_id, self.get_default_wait())
+    new_image = self.get_image_eventually_consistent(image_id)
 
     if new_image is None:
       self.freakout(new_image, " is none")
@@ -116,12 +118,12 @@ class EC2(AWS_BASE):
       new_tags['CreatedByAlfajor'] = 'true'
       self.set_tags_eventually_consistent(new_image, new_tags, wait = 45, retries =3)
 
-      # Tag image snapshots for easier management
-      self.tag_snapshots_for_image(new_image)
-
+      # Mark image id to add tags to snapshots
+      self.__created_amis.append(new_image.id)
+      
     return image_id
 
-  def set_tags_eventually_consistent(self, resource, tags, wait = 45, retries = 3):
+  def set_tags_eventually_consistent(self, resource, tags, wait = 15, retries = 9):
     counter = 0
 
     while counter < retries:
@@ -136,7 +138,7 @@ class EC2(AWS_BASE):
     return None
 
 
-  def get_image_eventually_consistent(self, image_id, wait = 45, retries = 3):
+  def get_image_eventually_consistent(self, image_id, wait = 15, retries = 9):
     counter = 0
 
     while counter < retries:
@@ -179,12 +181,25 @@ class EC2(AWS_BASE):
     #e.g. 28
     return days_to_keep
 
-  def tag_snapshots_for_image(self, image):
-    filters = { 'description' : "*{0}*".format(image.id)}
+  def tag_snapshots_for_image(self, ami_id):
+    filters = { 'description' : "*{0}*".format(ami_id)}
     snapshots = self.get_conn().get_all_snapshots(filters=filters, owner = 'self')
+    wait = 30
+    max_retries = 6
+    retries = 0
+    self.log("Adding tags to snapshots for image {0}".format(ami_id))
+    # perhaps snapshots are not visible yet, allow them some time to appear, max 3 minutes
+    self.log("Discovered snapshots in run #1: " + str(snapshots))
+    
+    while len(snapshots) == 0 and retries < max_retries:
+      time.sleep(wait)
+      snapshots = self.get_conn().get_all_snapshots(filters=filters, owner = 'self')
+      self.log("Discovered snapshots in run #" + str(retries + 2) + ": " + str(snapshots))
+      retries = retries + 1
+      
     for s in snapshots:
-        self.log("tagging snapshot " + s.id + " for ami " + image.id )
-        s.add_tags({'CreatedByAlfajor': 'true', 'ImageId': image.id})
+        self.log("tagging snapshot " + s.id + " for ami " + ami_id)
+        s.add_tags({'CreatedByAlfajor': 'true','AMISnapshot':'true', 'ImageId': ami_id})
 
 
   def list_snapshot_for_image(self, image):
@@ -221,7 +236,7 @@ class EC2(AWS_BASE):
       self.verbose("days since creation: " + str(days_since_creation))
 
       if days_since_creation > days_to_keep:
-        self.log(image.id + " is going to be deregistered. description: " + image.description + " creation_date: " + str(image.creationDate) + "tags:" + str(image.tags) + "Days since creation is : " + str(days_since_creation))
+        self.log(image.id + " is going to be deregistered.\n description: " + image.description + " \ncreation_date: " + str(image.creationDate) + "\ntags:" + json.dumps(image.tags) + "\nDays since creation is : " + str(days_since_creation) + "\n")
         #self.debug(image.block_device_mapping.current_value.snapshot_id)
         if delete:
           self.deregister_image_eventually_consistent(image, self.get_default_wait)
@@ -229,6 +244,7 @@ class EC2(AWS_BASE):
 
   def delete_ami_snapshots(self, image):
     snap_ids = []
+    self.log("\n\n\n===== CLEANUP SNAPSHOTS FOR AMI {0} =====\n\n\n".format(image.id))
     for mount,device in image.block_device_mapping.iteritems():
       if device.snapshot_id != None:
         if device.snapshot_id.startswith("snap-"):
@@ -268,7 +284,7 @@ class EC2(AWS_BASE):
     self.list_reservations(reservations)
     for r in reservations:
       for i in r.instances:
-        self.debug("clean backups processing: " + i.id)
+        self.debug("\n\n\n===== CLEAN BACKUPS PROCESSING FOR INSTANCE {0} ======\n\n\n".format(i.id))
         #TODO: check for keep flag
         self.log(self.delete_with_retention(i,True))
 
@@ -280,6 +296,9 @@ class EC2(AWS_BASE):
       for i in r.instances:
         self.log(self.create_image(i))
 
+  def tag_created_ami_snapshots(self):
+    for ami_id in self.__created_amis:
+      self.tag_snapshots_for_image(ami_id)
 
   def create_backups(self, tag = None):
     if tag == None:
@@ -291,19 +310,8 @@ class EC2(AWS_BASE):
       self.create_instance_snapshots(tag)
       #TODO: self.clean_volume_backups(tag)
       self.backup_volumes(tag)
+      self.tag_created_ami_snapshots()
 
-# tag = MakeSnapshot
-  # ToDo: delete vols if no tags set
-  #def delete_unattached_volumes(self, volumekeeptag == "None"):
-  #  counter = 0
-  #  vols = self.get_conn().get_all_volumes()
-  #  for vol in vols:
-  #    state = vol.attachment_state()
-  #    if state == None:
-  #      counter = counter + 1
-  #      loginstance = AWS_BASE()
-  #      loginstance.log("Unattached: ", counter, ", ", vol.id, ", ", state, ",", vol.create_time, ", ", vol.size)
-  #      vol.delete()
 
   # ToDo: delete_unattached_volumes_keeptag_configfile():
 
