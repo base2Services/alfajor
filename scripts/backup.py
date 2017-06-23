@@ -1,7 +1,12 @@
 import sys
 import os
-sys.path.append("alfajor")
-sys.path.append("../alfajor")
+
+pwd = os.environ['PWD']
+alfajor_path = "{0}".format(pwd)
+alfajor_path2 = "{0}/..".format(pwd)
+
+sys.path.append(alfajor_path)
+sys.path.append(alfajor_path2)
 
 import boto
 from alfajor import aws_ec2
