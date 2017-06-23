@@ -8,6 +8,7 @@ alfajor_path3 = "{0}/alfajor".format(pwd) #if running from folder above alfajor
 
 sys.path.append(alfajor_path)
 sys.path.append(alfajor_path2)
+sys.path.append(alfajor_path3)
 
 import boto
 from alfajor import aws_ec2
