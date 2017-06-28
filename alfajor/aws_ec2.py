@@ -9,6 +9,7 @@ import re
 import sys
 import os
 import json
+import traceback
 
 class EC2(AWS_BASE):
 
@@ -183,7 +184,11 @@ class EC2(AWS_BASE):
 
   def tag_snapshots_for_image(self, ami_id):
     filters = { 'description' : "*{0}*".format(ami_id)}
-    snapshots = self.get_conn().get_all_snapshots(filters=filters, owner = 'self')
+    try:
+      snapshots = self.get_conn().get_all_snapshots(filters=filters, owner = 'self')
+    except:
+      snapshots = []
+        
     wait = 30
     max_retries = 6
     retries = 0
@@ -193,13 +198,27 @@ class EC2(AWS_BASE):
     
     while len(snapshots) == 0 and retries < max_retries:
       time.sleep(wait)
-      snapshots = self.get_conn().get_all_snapshots(filters=filters, owner = 'self')
+      try:
+        snapshots = self.get_conn().get_all_snapshots(filters=filters, owner = 'self')
+      except:
+        snapshots = []
+        
       self.log("Discovered snapshots in run #" + str(retries + 2) + ": " + str(snapshots))
       retries = retries + 1
       
     for s in snapshots:
-        self.log("tagging snapshot " + s.id + " for ami " + ami_id)
-        s.add_tags({'CreatedByAlfajor': 'true','AMISnapshot':'true', 'ImageId': ami_id})
+      self.log("tagging snapshot " + s.id + " for ami " + ami_id)
+      retries = 0
+      success = False
+      while retries < max_retries and not success:
+        try:
+          s.add_tags({'CreatedByAlfajorAmiSnapshot': 'true', 'AMISnapshot': 'true', 'ImageId': ami_id})
+          success = True
+        except:
+          print "Could not tag snapshot {0}:\n{1}".format(s.id,traceback.format_exc())
+          retries = retries + 1
+          print "Retrying #{0} ... ".format(retries)
+
 
 
   def list_snapshot_for_image(self, image):

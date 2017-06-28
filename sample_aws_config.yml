@@ -16,6 +16,8 @@ aws:
     sns_arn: arn:aws:sns:ap-southeast-2:111111:maintenance
     snapshot:
       make_snapshot_tag: MakeSnapshot
+      keep_weekly_ebs: 8
+      keep_monthly_ebs: 12
       snapshot_tags:
         AutomatedCopy: true
       retention_tag: Retention
