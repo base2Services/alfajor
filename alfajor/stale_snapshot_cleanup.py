@@ -12,10 +12,13 @@ from aws_base import AWS_BASE
 from boto import ec2
 from alfajor import aws_base
 
+
 class SnapShotCleanup(AWS_BASE):
+    """ Cleans up Stale EBS snapshots created by Alfajor utility"""
+    
     def init(self):
         self.set_conn(boto.ec2.connect_to_region(**self.get_connection_settings()))
-    
+        
     ##
     # Cleanup EBS snapshots created by aws_ec2.backup_volumes method. Snapshot discovery is done using
     #  'Created by Alfajor' tag in user's AWS Account
@@ -25,7 +28,7 @@ class SnapShotCleanup(AWS_BASE):
     # Will tag all survived snapshots with expiry time and retention period type, if they aren't tagged already
     #    with this information
     ##
-    def cleanup_stale_snapshots(self):
+    def cleanup_stale_snapshots(self, dry_run=False):
 
         # collect snapshots based on alfajor tag
         keep_weekly = self._config.get_config()['snapshot']['keep_weekly_ebs']
@@ -33,11 +36,12 @@ class SnapShotCleanup(AWS_BASE):
         
         snapshots = self.get_conn().get_all_snapshots(owner='self', filters={'tag-key': 'Created by Alfajor'})
         delete_snapshots = []
-        i=0
+        i = 0
         for snapshot in snapshots:
             i = i + 1
             print "\n\n=== Processing snapshot {0} ({1}/{2}) \n".format(snapshot.id,i,len(snapshots))
-            
+            if 'Name' in snapshot.tags:
+                print snapshot.tags['Name']
             # get retention period, defaulting to 28 days
             if 'Retention' in snapshot.tags:
                 retention_config = self.get_retention_config()
@@ -46,7 +50,7 @@ class SnapShotCleanup(AWS_BASE):
             else:
                 retention = 28
             
-            # calculate expire date
+            # calculate expire date and retention type
             date_created = dateutil.parser.parse(snapshot.start_time)
             keep_until = date_created + timedelta(days=retention)
             is_weekly = False
@@ -56,12 +60,15 @@ class SnapShotCleanup(AWS_BASE):
                 keep_until = date_created + relativedelta(weeks=keep_weekly)
                 print "WEEKLY SNAPSHOT"
                 is_weekly = True
+                retention_type = 'weekly'
             elif date_created.day == 1:
                 keep_until = date_created + relativedelta(months=keep_monthly)
                 print "MOHTLY SNAPSHOT"
                 is_monthly = True
+                retention_type = 'monthly'
             else:
                 print "DAILY SNAPSHOT"
+                retention_type = 'daily'
             
             now = datetime.now(keep_until.tzinfo)
             do_delete = now > keep_until
@@ -77,13 +84,6 @@ class SnapShotCleanup(AWS_BASE):
             print "Snapshot expiry date is {0}".format(keep_until)
             print "Snapshot {0} be deleted".format("SHOULD" if do_delete else "SHOULD NOT")
             
-            if is_weekly:
-                type = 'weekly'
-            elif is_monthly:
-                type = 'monthly'
-            else:
-                type = 'daily'
-            
             if do_delete:
                 delete_snapshots.append(snapshot.id)
                 if 'DeleteMarker' not in snapshot.tags:
@@ -95,21 +95,29 @@ class SnapShotCleanup(AWS_BASE):
                     snapshot.add_tag('KeepUntil', keep_until)
                     
                 # set metadata about expiration retention period type
-                if 'RetentionType' in snapshot.tags:
-                    snapshot.add_tag('RetentionType', type)
+                if 'RetentionType' not in snapshot.tags:
+                    snapshot.add_tag('RetentionType', retention_type)
                 
                 # implicitly set expiration retention period type in snapshot name
-                if 'Name' not in snapshot.tags or not snapshot.tags['Name'].endswith("-{0}".format(type)):
+                if 'Name' not in snapshot.tags or not snapshot.tags['Name'].endswith("-{0}".format(retention_type)):
                     name = snapshot.tags['Name'] if 'Name' in snapshot.tags else 'alfajor-volume-backup'
                     if name is not None:
                         snapshot.remove_tag('Name')
-                    snapshot.add_tag('Name', '{0}-{1}'.format(name, type))
-            
+                    snapshot.add_tag('Name', '{0}-{1}'.format(name, retention_type))
             
         print "\n\nTotal of {0} snapshots found for deletion".format(len(delete_snapshots))
-        
-        for snap_id in snapshots:
-            self.delete_snapshot(snap_id)
+
+        with open('delete_snapshots.txt', 'wb') as f:
+            for snap_id in delete_snapshots:
+                f.write("{0}".format(snap_id))
+                f.write("\n")
+                if dry_run:
+                    print "Snapshot {0} would be deleted".format(snap_id)
+                else:
+                    self.delete_snapshot(snap_id)
+                
+        if dry_run:
+            print "\n\n\n ****** Snapshots marked for deletion with tag DeleteMarker=true ******\n\n\n"
     
     def delete_snapshot(self, snap_id, retry_times=8, sleep=15):
         count = 0
