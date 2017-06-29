@@ -94,13 +94,30 @@ class EC2(AWS_BASE):
     #foreach create image
     return None
 
+  def safe_api_call(self, fn, retries=10, timeout=15):
+    count = 0
+    
+    while count < retries:
+      try:
+        rval = fn()
+        return rval
+      except:
+        print "Failed to execute API call, retrying in {0} seconds...".format(timeout)
+        print traceback.format_exc()
+        count = count+1
+        if count == retries:
+          print "Failed after {0} retries ".format(retries)
 
   def create_image(self, instance, no_reboot = True):
     self.log("\n\n==== CREATE AMI FOR INSTANCE {0} ====\n\n".format(instance.id))
     date_string = self.get_date_string()
     name = self.get_instance_name(instance) + "-" + self.get_date_string()
     description = self.description_start() + ": copy_of:" + name + " created_at:" + date_string + " original_instance:" + instance.id
-    image_id = instance.create_image(name, description, no_reboot)
+    
+    def createimage():
+      return instance.create_image(name, description, no_reboot)
+
+    image_id = self.safe_api_call(createimage)
 
     self.log(image_id)
     #TODO: handle boto.exception.EC2ResponseError: for eventual consistency: try catch
